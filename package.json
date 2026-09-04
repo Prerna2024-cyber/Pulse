@@ -1,0 +1,17 @@
+{
+  "name": "pulse-watchlist",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "server": "node server/index.js",
+    "worker": "node worker/index.js",
+    "worker:once": "RUN_ONCE=true node worker/index.js",
+    "test": "node --test lib/*.test.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "pg": "^8.13.0"
+  }
+}
