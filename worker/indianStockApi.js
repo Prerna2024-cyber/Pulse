@@ -6,6 +6,8 @@
 // or run it locally (`wrangler dev`, default http://localhost:8787) and point
 // INDIAN_STOCK_API_BASE_URL at it.
 
+import { toFiniteOrNull } from '../lib/quote.js';
+
 const BASE_URL = process.env.INDIAN_STOCK_API_BASE_URL || 'http://localhost:8787';
 const REQUEST_TIMEOUT_MS = Number(process.env.INDIAN_STOCK_API_TIMEOUT_MS || 15000);
 
@@ -41,7 +43,16 @@ export async function fetchIndianQuotes(tickers) {
   for (const stock of body.stocks || []) {
     const ticker = symbolFor.get(stock.ticker);
     if (!ticker || stock.error || stock.last_price == null || stock.volume == null) continue;
-    quotes.push({ ticker, price: stock.last_price, volume: Math.trunc(stock.volume), fetchedAt });
+    // Day change is optional — a quote without it is still a usable price, so
+    // it's normalized to null rather than skipping the row.
+    quotes.push({
+      ticker,
+      price: stock.last_price,
+      volume: Math.trunc(stock.volume),
+      dayChange: toFiniteOrNull(stock.change),
+      dayChangePercent: toFiniteOrNull(stock.percent_change),
+      fetchedAt,
+    });
   }
   return quotes;
 }

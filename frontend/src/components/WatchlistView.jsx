@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getWatchlist, addTicker, removeTicker } from '../api.js';
-import { timeAgo } from '../timeAgo.js';
+import { timeAgo, isStale } from '../timeAgo.js';
+import { dayChangeSignal } from '../dayChange.js';
 import SearchBar from './SearchBar.jsx';
 import StatusMessage from './StatusMessage.jsx';
 
@@ -57,36 +58,53 @@ export default function WatchlistView({ username, currency }) {
 
       {items !== null && items.length > 0 && (
         <ul className="watchlist">
-          {items.map((item) => (
-            <li key={item.ticker} className="watchlist-row">
-              <div className="watchlist-row-main">
-                <strong>{item.companyName}</strong>
-                <span className="muted small">
-                  {item.ticker} · {item.exchange}
-                </span>
-              </div>
-              <div className="watchlist-row-price">
-                {item.price != null ? (
-                  <>
-                    <span className="price">
-                      {currency} {Number(item.price).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                    </span>
-                    <span className="muted small">as of {timeAgo(item.fetchedAt)}</span>
-                  </>
-                ) : (
-                  <span className="muted small">waiting for price…</span>
-                )}
-              </div>
-              <button
-                className="btn btn-icon"
-                aria-label={`Remove ${item.companyName} from watchlist`}
-                onClick={() => handleRemove(item.ticker)}
-                disabled={removingTicker === item.ticker}
-              >
-                {removingTicker === item.ticker ? '…' : '✕'}
-              </button>
-            </li>
-          ))}
+          {items.map((item) => {
+            // Icon + color together, never color alone — the ⚠️ carries the
+            // same signal for anyone who can't pick up the amber.
+            const stale = item.price != null && isStale(item.fetchedAt);
+            const day = dayChangeSignal(item.dayChange, item.dayChangePercent);
+            return (
+              <li key={item.ticker} className="watchlist-row">
+                <div className="watchlist-row-main">
+                  <strong>{item.companyName}</strong>
+                  <span className="muted small">
+                    {item.ticker} · {item.exchange}
+                  </span>
+                </div>
+                <div className="watchlist-row-price">
+                  {item.price != null ? (
+                    <>
+                      <span className="price">
+                        {currency} {Number(item.price).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      </span>
+                      {day && (
+                        <span className={`small day-change day-change-${day.tone}`}>
+                          <span aria-hidden="true">{day.icon} </span>
+                          {day.percentText}
+                          <span className="sr-only"> {day.label}</span>
+                        </span>
+                      )}
+                      <span className={stale ? 'small stale' : 'muted small'}>
+                        {stale && <span aria-hidden="true">⚠️ </span>}
+                        as of {timeAgo(item.fetchedAt)}
+                        {stale && <span className="sr-only"> — may be out of date</span>}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="muted small">waiting for price…</span>
+                  )}
+                </div>
+                <button
+                  className="btn btn-icon"
+                  aria-label={`Remove ${item.companyName} from watchlist`}
+                  onClick={() => handleRemove(item.ticker)}
+                  disabled={removingTicker === item.ticker}
+                >
+                  {removingTicker === item.ticker ? '…' : '✕'}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

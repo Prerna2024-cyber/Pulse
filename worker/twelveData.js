@@ -5,6 +5,8 @@
 // fetches. All NASDAQ tickers go in one comma-separated `symbol=` request
 // per poll, same batching approach as the Indian fetcher.
 
+import { toFiniteOrNull } from '../lib/quote.js';
+
 const API_KEY = process.env.TWELVE_DATA_API_KEY;
 const REQUEST_TIMEOUT_MS = Number(process.env.TWELVE_DATA_TIMEOUT_MS || 15000);
 
@@ -48,7 +50,16 @@ export async function fetchUSQuotes(tickers) {
       console.error(`[twelveData] ${symbol}: missing/invalid price or volume in response`);
       continue;
     }
-    quotes.push({ ticker: symbol, price, volume: Math.trunc(volume), fetchedAt });
+    // Twelve Data sends these as strings; missing ones normalize to null so a
+    // priced row is never dropped just for lacking a day change.
+    quotes.push({
+      ticker: symbol,
+      price,
+      volume: Math.trunc(volume),
+      dayChange: toFiniteOrNull(quote.change),
+      dayChangePercent: toFiniteOrNull(quote.percent_change),
+      fetchedAt,
+    });
   }
   return quotes;
 }

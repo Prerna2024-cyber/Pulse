@@ -34,20 +34,23 @@ export async function getTrackedTickers() {
 export async function upsertMarketData(quotes) {
   if (quotes.length === 0) return;
 
+  const COLUMNS = 6;
   const values = [];
   const placeholders = quotes.map((q, i) => {
-    const base = i * 4;
-    values.push(q.ticker, q.price, q.volume, q.fetchedAt);
-    return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`;
+    const base = i * COLUMNS;
+    values.push(q.ticker, q.price, q.volume, q.dayChange ?? null, q.dayChangePercent ?? null, q.fetchedAt);
+    return `(${Array.from({ length: COLUMNS }, (_, n) => `$${base + n + 1}`).join(', ')})`;
   });
 
   await pool.query(
     `
-    INSERT INTO market_data (ticker, price, volume, fetched_at)
+    INSERT INTO market_data (ticker, price, volume, day_change, day_change_percent, fetched_at)
     VALUES ${placeholders.join(', ')}
     ON CONFLICT (ticker)
     DO UPDATE SET price = EXCLUDED.price,
                   volume = EXCLUDED.volume,
+                  day_change = EXCLUDED.day_change,
+                  day_change_percent = EXCLUDED.day_change_percent,
                   fetched_at = EXCLUDED.fetched_at
     `,
     values

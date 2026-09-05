@@ -53,6 +53,25 @@ select {
   color: var(--negative);
 }
 
+/* Stale "as of" label — amber instead of muted gray, paired with a ⚠️ so the
+   warning doesn't rest on color alone. */
+.stale {
+  color: var(--notice);
+  font-weight: 600;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---------- Screens (login / onboarding / boot error) ---------- */
 
 .screen {
@@ -338,6 +357,25 @@ select {
 .price {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* Day change — the ▲/▼ and the signed number carry the direction on their
+   own, so these colours reinforce rather than encode it. */
+.day-change {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-change-positive {
+  color: var(--positive);
+}
+
+.day-change-negative {
+  color: var(--negative);
+}
+
+.day-change-neutral {
+  color: var(--muted);
 }
 
 /* ---------- What changed ---------- */
