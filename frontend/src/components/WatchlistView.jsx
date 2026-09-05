@@ -4,6 +4,7 @@ import { timeAgo, isStale } from '../timeAgo.js';
 import { dayChangeSignal } from '../dayChange.js';
 import SearchBar from './SearchBar.jsx';
 import StatusMessage from './StatusMessage.jsx';
+import WatchlistHero from './WatchlistHero.jsx';
 
 export default function WatchlistView({ username, currency }) {
   const [items, setItems] = useState(null);
@@ -42,6 +43,8 @@ export default function WatchlistView({ username, currency }) {
 
   return (
     <div className="view">
+      <WatchlistHero username={username} items={error ? null : items} />
+
       <SearchBar username={username} watchlistTickers={watchlistTickers} onAdd={handleAdd} />
 
       {error && <StatusMessage icon="⚠️" tone="error" title="Couldn't load your watchlist" hint={error} />}

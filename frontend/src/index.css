@@ -313,6 +313,26 @@ select {
   border-bottom: none;
 }
 
+/* ---------- Watchlist hero ---------- */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hero-greeting {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.hero-stats,
+.hero-updated {
+  margin: 0;
+}
+
 /* ---------- Watchlist ---------- */
 
 .watchlist {
