@@ -1,7 +1,12 @@
 import 'dotenv/config';
 import { pool, getTrackedTickers, recordQuotes } from './db.js';
+import { installProcessGuards } from '../lib/processGuards.js';
 import { fetchIndianQuotes } from './indianStockApi.js';
 import { fetchUSQuotes } from './twelveData.js';
+
+// This process runs unattended for hours. A stray rejection anywhere in a
+// poll cycle would otherwise end it silently and it would never come back.
+installProcessGuards('worker');
 
 // India (self-hosted Cloudflare Worker proxy, no quota) and US (Twelve Data,
 // 800 req/day free tier — one poll = one batched request, so 5 min keeps
@@ -71,23 +76,47 @@ async function warnAboutUnroutedExchanges() {
   }
 }
 
+// A poll that can't throw. The fetch inside pollGroup is already guarded, but
+// the database write isn't, and a failed write used to reach main() unhandled
+// and take the process with it.
+async function safePoll(group) {
+  try {
+    await pollGroup(group);
+  } catch (err) {
+    console.error(`[worker:${group.name}] poll failed:`, err.message);
+  }
+}
+
 async function main() {
   console.log(
     `[worker] starting — india poll every ${INDIA_POLL_INTERVAL_MS}ms, us poll every ${US_POLL_INTERVAL_MS}ms`
   );
 
-  await warnAboutUnroutedExchanges();
-  await Promise.all(GROUPS.map((group) => pollGroup(group)));
-
-  if (process.env.RUN_ONCE === 'true') {
+  // A one-shot run is a manual check, so let it fail loudly and exit non-zero
+  // — that's the useful behaviour for something a person is watching.
+  const runOnce = process.env.RUN_ONCE === 'true';
+  if (runOnce) {
+    await warnAboutUnroutedExchanges();
+    await Promise.all(GROUPS.map((group) => pollGroup(group)));
     await pool.end();
     return;
   }
 
+  // The continuous worker is the opposite: it has to outlive a bad moment.
+  // A database or upstream hiccup at boot is usually transient and the loop
+  // below would have recovered on the next tick, but the first poll's failure
+  // reached main() and exited — and with nothing supervising this process,
+  // exiting means staying down until someone notices.
+  try {
+    await warnAboutUnroutedExchanges();
+  } catch (err) {
+    console.error('[worker] could not check exchange routing:', err.message);
+  }
+
+  await Promise.all(GROUPS.map((group) => safePoll(group)));
+
   for (const group of GROUPS) {
-    setInterval(() => {
-      pollGroup(group).catch((err) => console.error(`[worker:${group.name}] poll failed:`, err));
-    }, group.intervalMs);
+    setInterval(() => safePoll(group), group.intervalMs);
   }
 }
 

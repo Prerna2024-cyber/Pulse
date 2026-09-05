@@ -11,6 +11,7 @@ export default function TrendingSection({ username, market, watchlistTickers, on
   const [rows, setRows] = useState(null);
   const [error, setError] = useState(null);
   const [addingTicker, setAddingTicker] = useState(null);
+  const [addError, setAddError] = useState(null);
 
   const load = useCallback(() => {
     setError(null);
@@ -28,8 +29,13 @@ export default function TrendingSection({ username, market, watchlistTickers, on
 
   async function handleAdd(ticker) {
     setAddingTicker(ticker);
+    setAddError(null);
     try {
       await onAdd(ticker);
+    } catch (err) {
+      // Without a catch the rejection went nowhere: the button reset and the
+      // row sat there, so a failed add looked exactly like a successful one.
+      setAddError(`Couldn't add ${ticker} — ${err.message}`);
     } finally {
       setAddingTicker(null);
     }
@@ -44,6 +50,12 @@ export default function TrendingSection({ username, market, watchlistTickers, on
       <h2 className="trending-heading">
         <span aria-hidden="true">🔥</span> Trending on Pulse
       </h2>
+      {addError && (
+        <p className="error-text small" role="alert">
+          {addError}
+        </p>
+      )}
+
       <p className="muted small trending-sub">Most tracked by other people in your market</p>
 
       <ul className="trending-list">

@@ -8,6 +8,36 @@ import DashboardScreen from './components/dash/DashboardScreen.jsx';
 
 const STORAGE_KEY = 'pulse.username';
 
+// localStorage doesn't merely return null when it's unavailable — it throws.
+// Safari private mode, blocked site data and some embedded webviews all do it,
+// and an unguarded read in the useState initializer below would take the whole
+// app down on its first render, with no error boundary underneath to catch it.
+// Staying signed in is a convenience; losing it should cost a re-login, not
+// the entire screen.
+function readStoredUsername() {
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storeUsername(username) {
+  try {
+    localStorage.setItem(STORAGE_KEY, username);
+  } catch {
+    // The session won't survive a reload, which is the right thing to lose.
+  }
+}
+
+function clearStoredUsername() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // If the write failed earlier there is nothing here to clear anyway.
+  }
+}
+
 export default function App() {
   const [user, setUser] = useState(null); // { username, preferredMarket }
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
@@ -17,10 +47,10 @@ export default function App() {
   // Seeded synchronously from localStorage so the very first render already
   // knows a returning user is being signed in — otherwise the landing screen
   // paints for a frame and then vanishes on every reload.
-  const [booting, setBooting] = useState(() => Boolean(localStorage.getItem(STORAGE_KEY)));
+  const [booting, setBooting] = useState(() => Boolean(readStoredUsername()));
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = readStoredUsername();
     if (saved) {
       api
         .login(saved)
@@ -32,7 +62,7 @@ export default function App() {
   }, []);
 
   function handleLoginResult(result) {
-    localStorage.setItem(STORAGE_KEY, result.username);
+    storeUsername(result.username);
     setUser({ username: result.username, preferredMarket: result.preferredMarket });
     setNeedsOnboarding(result.isNewUser);
   }
@@ -59,7 +89,7 @@ export default function App() {
   }
 
   function handleSwitchUser() {
-    localStorage.removeItem(STORAGE_KEY);
+    clearStoredUsername();
     setUser(null);
     setNeedsOnboarding(false);
     // Back to the landing screen, not straight to the form: it costs a

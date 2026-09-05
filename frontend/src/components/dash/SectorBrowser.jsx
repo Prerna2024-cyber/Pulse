@@ -16,6 +16,7 @@ export default function SectorBrowser({ username, market, watchlistTickers, onAd
   const [openSector, setOpenSector] = useState(null);
   const [companies, setCompanies] = useState(null);
   const [addingTicker, setAddingTicker] = useState(null);
+  const [addError, setAddError] = useState(null);
 
   const loadSectors = useCallback(() => {
     setError(null);
@@ -49,8 +50,14 @@ export default function SectorBrowser({ username, market, watchlistTickers, onAd
 
   async function handleAdd(ticker) {
     setAddingTicker(ticker);
+    setAddError(null);
     try {
       await onAdd(ticker);
+    } catch (err) {
+      // Kept separate from `error` above deliberately: that one blanks the
+      // whole tile grid, and losing the sectors because one add failed would
+      // be a wildly disproportionate response to it.
+      setAddError(`Couldn't add ${ticker} — ${err.message}`);
     } finally {
       setAddingTicker(null);
     }
@@ -88,6 +95,12 @@ export default function SectorBrowser({ username, market, watchlistTickers, onAd
 
       {openSector && (
         <div className="sector-results">
+          {addError && (
+            <p className="error-text small" role="alert">
+              {addError}
+            </p>
+          )}
+
           <p className="sector-results-head">
             <strong>{openSector}</strong>{' '}
             <span className="muted small">
