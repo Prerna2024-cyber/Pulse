@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getWatchlist, addTicker, removeTicker, peekDiff, getTrending } from '../../api.js';
 import { currencyForMarket } from '../../currency.js';
+import { useAutoRefresh } from '../../useAutoRefresh.js';
 import { greeting } from '../../greeting.js';
 import { watchlistSummary, movementPhrase, stockCountPhrase } from '../../watchlistSummary.js';
 import Sidebar from './Sidebar.jsx';
@@ -11,6 +12,10 @@ import SectorBrowser from './SectorBrowser.jsx';
 import WatchlistTable from './WatchlistTable.jsx';
 import TrendingSection from '../TrendingSection.jsx';
 import WhatChangedView from '../WhatChangedView.jsx';
+
+// Prices are written by the worker every 60s for India, so refreshing the
+// screen any faster would just re-read the same numbers.
+const AUTO_REFRESH_MS = 60 * 1000;
 
 // The signed-in app, laid out to the mockup: sidebar, top bar, and a main
 // column with a right rail.
@@ -36,12 +41,38 @@ export default function DashboardScreen({
   const [diffError, setDiffError] = useState(null);
   const [mostWatched, setMostWatched] = useState(null);
 
+  // Each loader replaces data in place and never blanks it first, so the
+  // 60-second refresh below can reuse them without the screen flashing back
+  // through its loading states every minute.
   const refresh = useCallback(() => {
     setError(null);
     return getWatchlist(username)
       .then(setItems)
       .catch((err) => setError(err.message));
   }, [username]);
+
+  const loadDiff = useCallback(
+    () =>
+      // Peek, not the consuming read — see WhatChangedPanel. This matters a
+      // great deal more now that it runs on a timer: the consuming endpoint
+      // would quietly reset the user's baseline every minute, so nothing would
+      // ever accumulate into a meaningful change.
+      peekDiff(username)
+        .then((data) => {
+          setDiff(data);
+          setDiffError(null);
+        })
+        .catch((err) => setDiffError(err.message)),
+    [username]
+  );
+
+  const loadTrending = useCallback(
+    () =>
+      getTrending(username)
+        .then((rows) => setMostWatched(rows[0] ?? null))
+        .catch(() => setMostWatched(null)),
+    [username]
+  );
 
   // market is a dependency throughout: every one of these endpoints scopes by
   // it server-side, so switching India/US has to refetch rather than leave the
@@ -51,27 +82,27 @@ export default function DashboardScreen({
   }, [refresh, market]);
 
   useEffect(() => {
-    let cancelled = false;
+    // Blanked here but not in the loader itself: switching user or market
+    // really is a fresh question and should show its loading state, whereas a
+    // background tick should not.
     setDiff(null);
     setDiffError(null);
-    // Peek, not the consuming read — see WhatChangedPanel.
-    peekDiff(username)
-      .then((data) => !cancelled && setDiff(data))
-      .catch((err) => !cancelled && setDiffError(err.message));
-    return () => {
-      cancelled = true;
-    };
-  }, [username, market, listVersion]);
+    loadDiff();
+  }, [loadDiff, market, listVersion]);
 
   useEffect(() => {
-    let cancelled = false;
-    getTrending(username)
-      .then((rows) => !cancelled && setMostWatched(rows[0] ?? null))
-      .catch(() => !cancelled && setMostWatched(null));
-    return () => {
-      cancelled = true;
-    };
-  }, [username, market, listVersion]);
+    loadTrending();
+  }, [loadTrending, market, listVersion]);
+
+  const refreshAll = useCallback(
+    () => Promise.all([refresh(), loadDiff(), loadTrending()]),
+    [refresh, loadDiff, loadTrending]
+  );
+
+  // Matches the worker's India cadence — polling faster than the data is
+  // written would just re-fetch the same numbers. US tickers are written every
+  // five minutes, so those simply repeat for a few ticks.
+  useAutoRefresh(refreshAll, AUTO_REFRESH_MS);
 
   async function handleAdd(ticker) {
     await addTicker(username, ticker);
