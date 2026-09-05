@@ -328,7 +328,10 @@ select {
   width: 100%;
 }
 
-.search-results {
+/* Shared by search results and trending — same list affordance, same row
+   shape, so adding a stock looks identical wherever it's offered. */
+.search-results,
+.trending-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -338,7 +341,8 @@ select {
   overflow: hidden;
 }
 
-.search-result-row {
+.search-result-row,
+.trending-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -347,8 +351,27 @@ select {
   border-bottom: 1px solid var(--border);
 }
 
-.search-result-row:last-child {
+.search-result-row:last-child,
+.trending-row:last-child {
   border-bottom: none;
+}
+
+/* ---------- Trending ---------- */
+
+.trending {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trending-heading {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.trending-sub {
+  margin: 0 0 6px;
 }
 
 /* ---------- Watchlist hero ---------- */

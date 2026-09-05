@@ -111,7 +111,11 @@ export default function App() {
 
       <main className="app-main">
         {tab === 'watchlist' ? (
-          <WatchlistView username={user.username} currency={CURRENCY_BY_MARKET[user.preferredMarket]} />
+          <WatchlistView
+            username={user.username}
+            market={user.preferredMarket}
+            currency={CURRENCY_BY_MARKET[user.preferredMarket]}
+          />
         ) : (
           <WhatChangedView username={user.username} />
         )}

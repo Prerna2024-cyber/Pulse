@@ -22,6 +22,9 @@ export const setMarket = (username, market) =>
 export const searchTickers = (username, q) =>
   request(`/tickers/search?q=${encodeURIComponent(q)}&username=${encodeURIComponent(username)}`);
 
+export const getTrending = (username) =>
+  request(`/tickers/trending?username=${encodeURIComponent(username)}`);
+
 export const getWatchlist = (username) => request(`/users/${encodeURIComponent(username)}/watchlist`);
 
 export const addTicker = (username, ticker) =>

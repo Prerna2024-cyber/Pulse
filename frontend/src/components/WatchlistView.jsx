@@ -5,11 +5,15 @@ import { dayChangeSignal } from '../dayChange.js';
 import SearchBar from './SearchBar.jsx';
 import StatusMessage from './StatusMessage.jsx';
 import WatchlistHero from './WatchlistHero.jsx';
+import TrendingSection from './TrendingSection.jsx';
 
-export default function WatchlistView({ username, currency }) {
+export default function WatchlistView({ username, market, currency }) {
   const [items, setItems] = useState(null);
   const [error, setError] = useState(null);
   const [removingTicker, setRemovingTicker] = useState(null);
+  // Bumped on every add/remove so trending re-reads its watcher counts
+  // instead of showing a figure that's one behind the user's own action.
+  const [listVersion, setListVersion] = useState(0);
 
   const refresh = useCallback(() => {
     setError(null);
@@ -18,13 +22,18 @@ export default function WatchlistView({ username, currency }) {
       .catch((err) => setError(err.message));
   }, [username]);
 
+  // market is a dependency because the endpoint filters by it server-side:
+  // without it, switching India/US left the previous market's stocks on
+  // screen until the tab was remounted.
   useEffect(() => {
     refresh();
-  }, [refresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refresh, market]);
 
   async function handleAdd(ticker) {
     await addTicker(username, ticker);
     await refresh();
+    setListVersion((v) => v + 1);
   }
 
   async function handleRemove(ticker) {
@@ -32,6 +41,7 @@ export default function WatchlistView({ username, currency }) {
     try {
       await removeTicker(username, ticker);
       await refresh();
+      setListVersion((v) => v + 1);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -110,6 +120,14 @@ export default function WatchlistView({ username, currency }) {
           })}
         </ul>
       )}
+
+      <TrendingSection
+        username={username}
+        market={market}
+        watchlistTickers={watchlistTickers}
+        onAdd={handleAdd}
+        reloadKey={listVersion}
+      />
     </div>
   );
 }
