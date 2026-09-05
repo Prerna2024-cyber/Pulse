@@ -1,0 +1,22 @@
+# Netlify build config. Vercel needs no file — set Root Directory to
+# "frontend" in its dashboard and it detects Vite on its own.
+#
+# VITE_API_BASE_URL is NOT set here on purpose. It's baked into the bundle at
+# build time, so it belongs in the host's environment settings where it can be
+# changed without a commit — and where the backend URL isn't committed to a
+# public repo.
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+# Pulse keeps its views in React state rather than the URL, so there are no
+# deep links to rewrite today. This is here so a refresh on any path still
+# serves the app rather than a 404 if routing is ever added.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  NODE_VERSION = "20"

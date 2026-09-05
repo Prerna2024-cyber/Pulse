@@ -1,4 +1,9 @@
-const BASE = '/api';
+// Same-origin in development: Vite proxies /api straight to the Express
+// server, so no host is needed and no CORS is involved. A deployed build has
+// no such proxy, so the full backend origin is baked in at build time via
+// VITE_API_BASE_URL (e.g. https://pulse-api.up.railway.app/api). Note it
+// includes the /api suffix, because every path below is relative to it.
+const BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, {

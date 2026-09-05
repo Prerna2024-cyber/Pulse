@@ -6,7 +6,13 @@ import { fetchUSQuotes } from './twelveData.js';
 
 // This process runs unattended for hours. A stray rejection anywhere in a
 // poll cycle would otherwise end it silently and it would never come back.
-installProcessGuards('worker');
+//
+// Exit on an uncaught exception only where something will restart us. Railway
+// injects RAILWAY_ENVIRONMENT into every deploy, so this is strict in
+// production and lenient on a laptop, where exiting would just mean staying
+// down. Nothing to remember to configure, and nothing to forget.
+const SUPERVISED = Boolean(process.env.RAILWAY_ENVIRONMENT);
+installProcessGuards('worker', { exitOnUncaught: SUPERVISED });
 
 // India (self-hosted Cloudflare Worker proxy, no quota) and US (Twelve Data,
 // 800 req/day free tier — one poll = one batched request, so 5 min keeps
