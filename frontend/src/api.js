@@ -22,6 +22,9 @@ export const setMarket = (username, market) =>
 export const searchTickers = (username, q) =>
   request(`/tickers/search?q=${encodeURIComponent(q)}&username=${encodeURIComponent(username)}`);
 
+// No username: this one is public, for the pre-login landing screen.
+export const getLiveMarket = () => request('/market/live');
+
 export const getTrending = (username) =>
   request(`/tickers/trending?username=${encodeURIComponent(username)}`);
 

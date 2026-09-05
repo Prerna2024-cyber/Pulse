@@ -26,6 +26,34 @@ tickersRouter.get('/tickers/search', loadUser, async (req, res, next) => {
   }
 });
 
+// A few real prices for the landing screen, before anyone has signed in.
+//
+// Deliberately the one ticker route with no loadUser: there's no user yet, so
+// there's no market to scope to, and the mix of NSE and NASDAQ rows doubles as
+// proof that both markets are wired up. It returns market data only — no
+// usernames and no watcher counts — even though it orders by popularity to
+// pick which tickers are worth showing.
+tickersRouter.get('/market/live', async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT m.ticker, t.company_name AS "companyName", t.exchange,
+              m.price, m.day_change AS "dayChange",
+              m.day_change_percent AS "dayChangePercent",
+              m.fetched_at AS "fetchedAt"
+       FROM market_data m
+       JOIN tickers t ON t.ticker = m.ticker
+       LEFT JOIN watchlist_items w ON w.ticker = m.ticker
+       GROUP BY m.ticker, t.company_name, t.exchange, m.price, m.day_change,
+                m.day_change_percent, m.fetched_at
+       ORDER BY COUNT(w.id) DESC, t.company_name
+       LIMIT 3`
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Most-watched tickers across all users (schema.sql query #3), scoped to the
 // caller's market like search and browse. This is the query idx_watchlist_ticker
 // was built to serve.

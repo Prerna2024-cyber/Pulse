@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as api from './api.js';
+import { currencyForMarket } from './currency.js';
 import LandingScreen from './components/LandingScreen.jsx';
 import LoginScreen from './components/LoginScreen.jsx';
 import OnboardingScreen from './components/OnboardingScreen.jsx';
@@ -8,7 +9,6 @@ import WhatChangedView from './components/WhatChangedView.jsx';
 import StatusMessage from './components/StatusMessage.jsx';
 
 const STORAGE_KEY = 'pulse.username';
-const CURRENCY_BY_MARKET = { India: '₹', US: '$' };
 
 export default function App() {
   const [user, setUser] = useState(null); // { username, preferredMarket }
@@ -114,7 +114,7 @@ export default function App() {
           <WatchlistView
             username={user.username}
             market={user.preferredMarket}
-            currency={CURRENCY_BY_MARKET[user.preferredMarket]}
+            currency={currencyForMarket(user.preferredMarket)}
           />
         ) : (
           <WhatChangedView username={user.username} />
