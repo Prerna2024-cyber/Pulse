@@ -37,3 +37,14 @@ export const removeTicker = (username, ticker) =>
   request(`/users/${encodeURIComponent(username)}/watchlist/${encodeURIComponent(ticker)}`, { method: 'DELETE' });
 
 export const getDiff = (username) => request(`/users/${encodeURIComponent(username)}/diff`);
+
+// Same diff, but leaves the snapshots alone — for surfaces that display what
+// changed without that counting as the user having checked. See diff.js.
+export const peekDiff = (username) =>
+  request(`/users/${encodeURIComponent(username)}/diff?peek=1`);
+
+export const getSectors = (username) =>
+  request(`/tickers/sectors?username=${encodeURIComponent(username)}`);
+
+export const getTickersBySector = (username, sector) =>
+  request(`/tickers?sector=${encodeURIComponent(sector)}&username=${encodeURIComponent(username)}`);

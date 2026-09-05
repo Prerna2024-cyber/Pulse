@@ -1,19 +1,16 @@
 import { useEffect, useState } from 'react';
 import * as api from './api.js';
-import { currencyForMarket } from './currency.js';
 import LandingScreen from './components/LandingScreen.jsx';
 import LoginScreen from './components/LoginScreen.jsx';
 import OnboardingScreen from './components/OnboardingScreen.jsx';
-import WatchlistView from './components/WatchlistView.jsx';
-import WhatChangedView from './components/WhatChangedView.jsx';
 import StatusMessage from './components/StatusMessage.jsx';
+import DashboardScreen from './components/dash/DashboardScreen.jsx';
 
 const STORAGE_KEY = 'pulse.username';
 
 export default function App() {
   const [user, setUser] = useState(null); // { username, preferredMarket }
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
-  const [tab, setTab] = useState('watchlist');
   const [bootError, setBootError] = useState(null);
   const [switchingMarket, setSwitchingMarket] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -65,7 +62,6 @@ export default function App() {
     localStorage.removeItem(STORAGE_KEY);
     setUser(null);
     setNeedsOnboarding(false);
-    setTab('watchlist');
     // Back to the landing screen, not straight to the form: it costs a
     // returning user one extra click, but it makes the whole flow demoable
     // from the front door without having to clear localStorage first.
@@ -90,47 +86,11 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <span className="app-title">Pulse</span>
-        <div className="header-actions">
-          <select
-            value={user.preferredMarket}
-            onChange={(e) => handleMarketSwitch(e.target.value)}
-            disabled={switchingMarket}
-            aria-label="Switch market"
-          >
-            <option value="India">🇮🇳 India</option>
-            <option value="US">🇺🇸 US</option>
-          </select>
-          <button className="btn btn-text" onClick={handleSwitchUser}>
-            {user.username} · switch
-          </button>
-        </div>
-      </header>
-
-      <main className="app-main">
-        {tab === 'watchlist' ? (
-          <WatchlistView
-            username={user.username}
-            market={user.preferredMarket}
-            currency={currencyForMarket(user.preferredMarket)}
-          />
-        ) : (
-          <WhatChangedView username={user.username} />
-        )}
-      </main>
-
-      <nav className="tab-bar">
-        <button className={`tab ${tab === 'watchlist' ? 'tab-active' : ''}`} onClick={() => setTab('watchlist')}>
-          <span aria-hidden="true">📋</span>
-          <span>Watchlist</span>
-        </button>
-        <button className={`tab ${tab === 'changed' ? 'tab-active' : ''}`} onClick={() => setTab('changed')}>
-          <span aria-hidden="true">🔔</span>
-          <span>What Changed</span>
-        </button>
-      </nav>
-    </div>
+    <DashboardScreen
+      user={user}
+      switchingMarket={switchingMarket}
+      onMarketChange={handleMarketSwitch}
+      onSwitchUser={handleSwitchUser}
+    />
   );
 }

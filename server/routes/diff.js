@@ -47,7 +47,19 @@ diffRouter.get('/users/:username/diff', loadUser, async (req, res, next) => {
       hasData: true,
     }));
 
-    if (withData.length > 0) {
+    // ?peek=1 returns the same diff without advancing the snapshots.
+    //
+    // Reading this endpoint normally *consumes* the diff — that's the whole
+    // design, and it's correct for the What Changed view, where opening it is
+    // the "I've checked" moment. But the dashboard shows the same information
+    // passively on every visit, and if that write ran there, each dashboard
+    // load would reset the baseline: revisit the page and everything would
+    // read as unchanged, and the What Changed view would find nothing left to
+    // report. Peek lets a passive surface display the diff and leaves marking
+    // it seen to the deliberate act.
+    const peek = req.query.peek === '1' || req.query.peek === 'true';
+
+    if (!peek && withData.length > 0) {
       const values = [];
       const placeholders = withData.map((r, i) => {
         const base = i * 4;

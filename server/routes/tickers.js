@@ -83,6 +83,27 @@ tickersRouter.get('/tickers/trending', loadUser, async (req, res, next) => {
   }
 });
 
+// Sectors with a real count of how many tickers each holds, scoped to the
+// caller's market — what the dashboard's sector tiles are built from. Counting
+// here rather than in the client means the tiles can never quote a number the
+// catalog doesn't actually contain.
+tickersRouter.get('/tickers/sectors', loadUser, async (req, res, next) => {
+  try {
+    const exchanges = exchangesForMarket(req.user.preferredMarket);
+    const { rows } = await pool.query(
+      `SELECT sector, COUNT(*)::int AS "tickerCount"
+       FROM tickers
+       WHERE exchange = ANY($1::text[]) AND sector IS NOT NULL
+       GROUP BY sector
+       ORDER BY "tickerCount" DESC, sector`,
+      [exchanges]
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Browse, optionally by sector (schema.sql query #2), scoped to the caller's market.
 tickersRouter.get('/tickers', loadUser, async (req, res, next) => {
   try {
