@@ -115,6 +115,44 @@ select {
   font-size: 1rem;
 }
 
+/* ---------- Landing (pre-login) ---------- */
+
+.landing-brand h1 {
+  font-size: 2.5rem;
+  margin-bottom: 6px;
+}
+
+.landing-tagline {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.landing-description {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.market-badges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.market-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
 .market-choices {
   display: flex;
   flex-direction: column;

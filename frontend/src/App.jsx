@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as api from './api.js';
+import LandingScreen from './components/LandingScreen.jsx';
 import LoginScreen from './components/LoginScreen.jsx';
 import OnboardingScreen from './components/OnboardingScreen.jsx';
 import WatchlistView from './components/WatchlistView.jsx';
@@ -15,11 +16,20 @@ export default function App() {
   const [tab, setTab] = useState('watchlist');
   const [bootError, setBootError] = useState(null);
   const [switchingMarket, setSwitchingMarket] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  // Seeded synchronously from localStorage so the very first render already
+  // knows a returning user is being signed in — otherwise the landing screen
+  // paints for a frame and then vanishes on every reload.
+  const [booting, setBooting] = useState(() => Boolean(localStorage.getItem(STORAGE_KEY)));
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      api.login(saved).then(handleLoginResult).catch((err) => setBootError(err.message));
+      api
+        .login(saved)
+        .then(handleLoginResult)
+        .catch((err) => setBootError(err.message))
+        .finally(() => setBooting(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -56,13 +66,23 @@ export default function App() {
     setUser(null);
     setNeedsOnboarding(false);
     setTab('watchlist');
+    // Straight back to the form rather than the landing pitch — someone
+    // deliberately switching accounts doesn't need to be sold the app again.
+    setShowLogin(true);
   }
 
+  if (booting) {
+    return <StatusMessage icon="⏳" title="Signing you back in…" />;
+  }
   if (bootError && !user) {
     return <StatusMessage icon="⚠️" tone="error" title="Couldn't reach Pulse" hint={bootError} />;
   }
   if (!user) {
-    return <LoginScreen onLogin={handleLogin} />;
+    return showLogin ? (
+      <LoginScreen onLogin={handleLogin} />
+    ) : (
+      <LandingScreen onGetStarted={() => setShowLogin(true)} />
+    );
   }
   if (needsOnboarding) {
     return <OnboardingScreen username={user.username} onPick={handleOnboardingPick} />;
