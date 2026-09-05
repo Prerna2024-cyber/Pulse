@@ -41,6 +41,14 @@ diffRouter.get('/users/:username/diff', loadUser, async (req, res, next) => {
         current: { price: Number(r.currentPrice), volume: Number(r.currentVolume) },
         previous: r.previousPrice != null ? { price: Number(r.previousPrice), volume: Number(r.previousVolume) } : null,
       }),
+      // The significance result carries the name only inside its summary
+      // sentence, which exists solely for meaningful changes. Unflagged rows
+      // are listed too now, so they need the name and exchange as fields.
+      companyName: r.companyName,
+      exchange: r.exchange,
+      // Distinguishes "nothing moved" from "never seen before": both come back
+      // unflagged, but only the first can honestly be called unchanged.
+      hasPrevious: r.previousPrice != null,
       currentPrice: Number(r.currentPrice),
       currentVolume: Number(r.currentVolume),
       fetchedAt: r.fetchedAt,

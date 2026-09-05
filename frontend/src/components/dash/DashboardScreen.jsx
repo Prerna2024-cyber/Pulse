@@ -221,7 +221,7 @@ export default function DashboardScreen({
 
           {/* The full view still uses the consuming read, so opening it is
               what marks these changes as seen — the dashboard only peeked. */}
-          {view === 'changed' && <WhatChangedView username={username} />}
+          {view === 'changed' && <WhatChangedView username={username} currency={currency} />}
         </main>
       </div>
     </div>

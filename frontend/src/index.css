@@ -2137,3 +2137,69 @@ html {
     gap: 20px;
   }
 }
+
+/* ---------- What Changed: full accounting ----------
+   Flagged moves keep the loud treatment; everything else is listed quietly
+   below so the view accounts for the whole watchlist rather than going silent
+   on the stocks that didn't move. */
+
+.changed-section-heading {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.quiet-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.quiet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.quiet-row:last-child {
+  border-bottom: none;
+}
+
+.quiet-text {
+  min-width: 0;
+}
+
+.quiet-name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.quiet-line {
+  margin: 2px 0 0;
+}
+
+.quiet-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.quiet-price-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
