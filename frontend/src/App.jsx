@@ -66,9 +66,10 @@ export default function App() {
     setUser(null);
     setNeedsOnboarding(false);
     setTab('watchlist');
-    // Straight back to the form rather than the landing pitch — someone
-    // deliberately switching accounts doesn't need to be sold the app again.
-    setShowLogin(true);
+    // Back to the landing screen, not straight to the form: it costs a
+    // returning user one extra click, but it makes the whole flow demoable
+    // from the front door without having to clear localStorage first.
+    setShowLogin(false);
   }
 
   if (booting) {
