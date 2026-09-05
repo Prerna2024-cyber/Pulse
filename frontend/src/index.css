@@ -9,6 +9,12 @@
      tint from one source instead of hardcoding the hex three more times. */
   --primary-rgb: 79, 70, 229;
   --primary-text: #ffffff;
+  /* Brand identity from the PULSE logo — the waveform gradient runs orange to
+     pink. Used by the landing page and the logo mark; the signed-in app keeps
+     the indigo --primary above. */
+  --brand-orange: #ffa45c;
+  --brand-coral: #ff6f5e;
+  --brand-pink: #f0447f;
   --positive: #15803d;
   --positive-bg: #ecfdf3;
   --negative: #b91c1c;
@@ -119,44 +125,148 @@ select {
 }
 
 /* ---------- Landing (pre-login) ----------
-   Mobile-first: every value below is the narrow-screen design, with one
-   min-width query at the end to open it up. Content is left-aligned rather
-   than centred — it reads as considered rather than as a pitch deck. */
+   Built to the mockups: coral/orange brand identity, generous whitespace,
+   card-based sections. Mobile-first — every value below is the narrow-screen
+   design, with min-width queries opening it into the desktop two-column
+   layouts. The app itself keeps its own indigo palette; these brand tokens
+   are scoped to the landing page. */
 
 .landing {
+  --ink: #0f1520;
+  --ink-soft: #5b6472;
+  --hero-top: #fff7f2;
+  --hero-bottom: #ffeee4;
   min-height: 100dvh;
-  background:
-    radial-gradient(120% 42% at 50% -8%, rgba(var(--primary-rgb), 0.08), transparent 62%),
-    var(--bg);
+  color: var(--ink);
+  background: var(--surface);
 }
 
 /* Jump links from the nav should land below the sticky bar, not under it. */
 .landing [id] {
-  scroll-margin-top: 78px;
+  scroll-margin-top: 84px;
 }
 
 .landing-section {
-  padding: 40px 0;
+  padding: 56px 0;
 }
 
 .landing-section-inner {
   width: 100%;
-  max-width: 1040px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 0 22px;
+  padding: 0 20px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-coral);
 }
 
 .section-heading {
-  margin: 0;
-  font-size: clamp(1.5rem, 6vw, 2rem);
+  margin: 14px 0 0;
+  font-size: clamp(1.75rem, 6.4vw, 2.4rem);
   font-weight: 800;
-  letter-spacing: -0.025em;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
 }
 
 .section-sub {
-  margin: 8px 0 0;
-  font-size: 0.98rem;
-  line-height: 1.5;
+  margin: 12px 0 0;
+  max-width: 44ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* ---------- Landing: buttons ---------- */
+
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+}
+
+.btn-dark {
+  background: var(--ink);
+  color: #fff;
+  padding: 15px 26px;
+  box-shadow: 0 8px 20px rgba(15, 21, 32, 0.18);
+}
+
+.btn-dark:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(15, 21, 32, 0.24);
+}
+
+.btn-dark:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.btn-outline {
+  background: var(--surface);
+  color: var(--ink);
+  padding: 15px 26px;
+  border: 1px solid #e6d9d2;
+}
+
+.btn-outline:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand-coral);
+}
+
+.btn-ghost {
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 10px 6px;
+  transition: color 180ms ease;
+}
+
+.btn-ghost:hover {
+  color: var(--brand-coral);
+}
+
+.btn-dark:focus-visible,
+.btn-outline:focus-visible,
+.btn-ghost:focus-visible {
+  outline: 3px solid rgba(240, 68, 127, 0.4);
+  outline-offset: 3px;
+}
+
+/* ---------- Landing: logo ---------- */
+
+.pulse-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pulse-logo-mark {
+  width: 22px;
+  height: 21px;
+  overflow: visible;
+}
+
+.pulse-logo-word {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  color: var(--ink);
 }
 
 /* ---------- Landing: sticky nav ---------- */
@@ -166,334 +276,335 @@ select {
 .landing-nav {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 30;
   background: transparent;
   border-bottom: 1px solid transparent;
-  transition: background-color 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  transition: background-color 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
 
 .landing-nav-scrolled {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.82);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  border-bottom-color: var(--border);
-  box-shadow: 0 8px 24px rgba(16, 20, 32, 0.06);
+  border-bottom-color: rgba(15, 21, 32, 0.07);
+  box-shadow: 0 8px 26px rgba(15, 21, 32, 0.06);
 }
 
 .landing-nav-inner {
   display: flex;
   align-items: center;
   gap: 16px;
-  max-width: 1040px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 12px 22px;
+  padding: 14px 20px;
 }
 
 .landing-nav-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
   margin-right: auto;
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text);
   text-decoration: none;
 }
 
-/* Minimal means minimal on a phone: the section links drop out and the bar
-   keeps only the brand and the way in. */
+/* The section links drop out on a phone — with a sign-in and a primary CTA
+   already in the bar, a hamburger for two anchors would be more chrome than
+   navigation. */
 .landing-nav-links {
   display: none;
-  gap: 22px;
+  gap: 26px;
 }
 
 .landing-nav-links a {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--ink-soft);
   text-decoration: none;
-  transition: color 160ms ease;
+  transition: color 180ms ease;
 }
 
 .landing-nav-links a:hover {
-  color: var(--text);
+  color: var(--ink);
 }
 
-.btn.landing-nav-cta {
-  flex-shrink: 0;
-  border-radius: 999px;
-  padding: 8px 16px;
-  transition: transform 160ms ease, box-shadow 160ms ease;
+.landing-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.btn.landing-nav-cta:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.28);
+.landing-nav-signin {
+  display: none;
+}
+
+.btn-dark.landing-nav-cta {
+  padding: 10px 18px;
+  font-size: 0.92rem;
+  box-shadow: none;
 }
 
 /* ---------- Landing: hero ---------- */
 
-/* Just under a full viewport (minus the nav), so the next section shows a
-   sliver and the page reads as scrollable without a chevron saying so. */
 .landing-hero {
-  min-height: calc(88dvh - 56px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  position: relative;
+  padding: 28px 0 64px;
+  background: linear-gradient(180deg, var(--hero-top) 0%, var(--hero-bottom) 100%);
+  overflow: hidden;
 }
 
-.landing-wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
+/* Two soft coral washes standing in for the mockup's blobs — decorative only,
+   so they sit behind the content and never intercept a click. */
+.landing-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(46% 42% at 88% 12%, rgba(255, 140, 110, 0.22), transparent 70%),
+    radial-gradient(38% 36% at 68% 60%, rgba(240, 68, 127, 0.12), transparent 72%);
+}
+
+.hero-layout {
+  position: relative;
+  display: grid;
+  gap: 34px;
+}
+
+.hero-pill {
+  display: inline-block;
   margin: 0;
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 122, 89, 0.28);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--brand-coral);
+  width: fit-content;
 }
 
-/* The one piece of motion that persists after the entrance — a slow, low
-   amplitude breath, on-theme for the name without drawing the eye. */
-.landing-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--primary);
-  animation: landing-pulse 2.8s ease-in-out infinite;
+.hero-heading {
+  margin: 22px 0 0;
+  font-size: clamp(2.5rem, 11.5vw, 4.4rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
 }
 
-/* The visual anchor. Scales with the viewport so it stays confident on a
-   360px phone without wrapping into a wall on a wide screen. */
-.landing-tagline {
-  margin: 24px 0 0;
-  max-width: 620px;
-  font-size: clamp(2.4rem, 11vw, 3.9rem);
-  line-height: 1.03;
-  letter-spacing: -0.035em;
-  font-weight: 900;
-  color: var(--text);
-  text-wrap: balance;
+/* The gradient sweep from the logo, reused on the phrase the mockup accents.
+   background-clip:text has no fallback colour of its own, so the element keeps
+   a solid coral underneath for anywhere the clip doesn't apply. */
+.hero-heading-accent {
+  color: var(--brand-coral);
+  background: linear-gradient(100deg, var(--brand-pink) 0%, var(--brand-coral) 55%, var(--brand-orange) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.landing-description {
-  margin: 18px 0 0;
+.hero-sub {
+  margin: 20px 0 0;
   max-width: 46ch;
-  font-size: 1rem;
-  line-height: 1.6;
-  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.62;
+  color: var(--ink-soft);
 }
 
-.market-badges {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 28px;
 }
 
-.market-badge {
+/* Full width on a phone so both are comfortable tap targets. */
+.hero-cta,
+.hero-secondary {
+  flex: 1 1 100%;
+  min-height: 54px;
+}
+
+/* ---------- Landing: markets panel ---------- */
+
+.markets-panel {
+  background: var(--surface);
+  border: 1px solid rgba(15, 21, 32, 0.07);
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(15, 21, 32, 0.08);
+  overflow: hidden;
+}
+
+.markets-panel-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 18px;
+  border-bottom: 1px solid rgba(15, 21, 32, 0.06);
 }
 
-/* .btn.landing-cta, not .landing-cta: the shared .btn rules live further down
-   the file, so at equal specificity they would win on order alone and quietly
-   take back the radius and padding set here. */
-.btn.landing-cta {
-  margin-top: 32px;
-  width: 100%;
-  /* Comfortably past the 44px minimum tap target, since this is the main
-     thing to press on the screen. */
-  min-height: 54px;
-  font-size: 1.05rem;
-  border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(var(--primary-rgb), 0.22);
-  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+.markets-panel-title {
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 
-.landing-cta:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(var(--primary-rgb), 0.3);
-}
-
-.landing-cta:active {
-  transform: translateY(0) scale(0.99);
-  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
-}
-
-.landing-cta:focus-visible {
-  outline: 3px solid rgba(var(--primary-rgb), 0.4);
-  outline-offset: 3px;
-}
-
-/* ---------- Landing: live ticker strip ---------- */
-
-/* Empty until the fetch lands, so it holds no space and nothing below it
-   jumps when the prices arrive. */
-.landing-ticker-slot:empty {
-  display: none;
-}
-
-.ticker-strip {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  max-width: 100%;
-  padding: 10px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
-.ticker-state {
+.markets-state {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  flex-shrink: 0;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--positive);
 }
 
-.ticker-state-dot {
+.markets-state-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: currentColor;
-  animation: landing-pulse 2.8s ease-in-out infinite;
+  animation: pulse-breathe 2.6s ease-in-out infinite;
 }
 
-.ticker-state-stale {
+.markets-state-stale {
   color: var(--notice);
 }
 
-/* Three quotes rarely fit a 360px screen, so the row scrolls sideways rather
-   than wrapping into a block or shrinking the type. */
-.ticker-items {
-  display: flex;
-  align-items: center;
-  gap: 18px;
+.markets-rows {
   margin: 0;
-  padding: 0;
+  padding: 4px 0;
   list-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
 }
 
-.ticker-items::-webkit-scrollbar {
-  display: none;
+.markets-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 18px;
 }
 
-.ticker-item {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  white-space: nowrap;
-  font-size: 0.85rem;
-}
-
-.ticker-symbol {
-  font-weight: 700;
-}
-
-.ticker-price {
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-}
-
-.ticker-change {
+.markets-row-name {
   font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.markets-row-price,
+.markets-row-change {
   font-variant-numeric: tabular-nums;
+  font-size: 0.92rem;
+}
+
+.markets-row-price {
+  color: var(--ink-soft);
+}
+
+.markets-row-change {
+  min-width: 62px;
+  text-align: right;
+  font-weight: 700;
 }
 
 /* ---------- Landing: what it does ---------- */
 
+.features-layout {
+  display: grid;
+  gap: 28px;
+}
+
 .feature-grid {
   display: grid;
   gap: 14px;
-  margin: 24px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .feature-card {
-  padding: 20px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  border-radius: 16px;
+  border: 1px solid transparent;
 }
 
-.feature-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(16, 20, 32, 0.07);
+.feature-card-inner {
+  height: 100%;
+  padding: 20px;
+}
+
+.feature-card-rose {
+  background: #fff1f2;
+  border-color: #ffe0e3;
+}
+.feature-card-green {
+  background: #f0fdf5;
+  border-color: #d9f2e3;
+}
+.feature-card-violet {
+  background: #f5f3ff;
+  border-color: #e6e1fd;
+}
+.feature-card-amber {
+  background: #fff5ea;
+  border-color: #ffe6cc;
 }
 
 .feature-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
-  background: rgba(var(--primary-rgb), 0.09);
-  font-size: 1.2rem;
+  background: rgba(255, 255, 255, 0.75);
+  font-size: 1.15rem;
 }
 
 .feature-title {
   margin: 14px 0 0;
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 .feature-body {
   margin: 8px 0 0;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   line-height: 1.6;
-}
-
-.feature-badges {
-  margin-top: 14px;
+  color: var(--ink-soft);
 }
 
 /* ---------- Landing: What Changed preview ---------- */
 
-/* A screenshot without the screenshot: the real change-card markup inside a
-   frame, so it can never drift from what the app actually renders. */
+.landing-preview {
+  background: #fbfaf9;
+}
+
+.preview-layout {
+  display: grid;
+  gap: 28px;
+}
+
+/* The real change rows in a frame rather than a screenshot, so it can't drift
+   from what the app renders. */
 .preview-frame {
-  margin-top: 22px;
-  max-width: 560px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid rgba(15, 21, 32, 0.07);
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(16, 20, 32, 0.07);
+  box-shadow: 0 18px 40px rgba(15, 21, 32, 0.07);
 }
 
 .preview-frame-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 15px 18px;
+  border-bottom: 1px solid rgba(15, 21, 32, 0.06);
+}
+
+.preview-frame-title {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .preview-cards {
@@ -505,103 +616,232 @@ select {
   list-style: none;
 }
 
+.preview-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px;
+  border-radius: 14px;
+}
+
+.preview-row-positive {
+  background: #f0fdf5;
+}
+
+.preview-row-notice {
+  background: #fff8ec;
+}
+
+.preview-row-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+}
+
+.preview-row-positive .preview-row-icon {
+  color: var(--positive);
+}
+
+.preview-row-notice .preview-row-icon {
+  color: var(--notice);
+}
+
+.preview-row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-row-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.preview-row-summary {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.preview-row-meta {
+  margin: 3px 0 0;
+  font-size: 0.8rem;
+  color: #94a0ae;
+}
+
+.preview-row-pill {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.preview-pill-positive {
+  color: var(--positive);
+}
+
+.preview-pill-notice {
+  color: var(--notice);
+}
+
+/* ---------- Landing: closing CTA ---------- */
+
+.cta-panel {
+  position: relative;
+  padding: 44px 24px;
+  border-radius: 24px;
+  text-align: center;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 80% at 18% 20%, rgba(255, 160, 120, 0.32), transparent 70%),
+    radial-gradient(60% 80% at 82% 80%, rgba(240, 68, 127, 0.2), transparent 70%),
+    linear-gradient(135deg, #fff1ea 0%, #ffe6e9 100%);
+}
+
+.cta-panel .eyebrow {
+  position: relative;
+}
+
+.cta-heading {
+  position: relative;
+  margin: 14px 0 0;
+  font-size: clamp(1.7rem, 6.6vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.cta-sub {
+  position: relative;
+  margin: 12px auto 0;
+  max-width: 46ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.cta-button {
+  position: relative;
+  margin-top: 26px;
+}
+
 /* ---------- Landing: footer ---------- */
 
 .landing-footer {
-  margin-top: 24px;
-  padding: 32px 0 calc(28px + env(safe-area-inset-bottom, 0px));
+  padding: 44px 0 calc(28px + env(safe-area-inset-bottom, 0px));
   background: var(--surface);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(15, 21, 32, 0.07);
 }
 
 .footer-columns {
   display: grid;
-  gap: 26px;
-}
-
-.footer-brand .landing-wordmark {
-  color: var(--text);
+  gap: 30px;
 }
 
 .footer-tagline {
-  margin: 10px 0 0;
-  max-width: 34ch;
+  margin: 14px 0 0;
+  max-width: 30ch;
   font-size: 0.92rem;
-  line-height: 1.5;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.footer-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+.footer-social:hover {
+  color: var(--brand-coral);
 }
 
 .footer-heading {
   margin: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: #94a0ae;
 }
 
 .footer-list {
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  margin: 12px 0 0;
+  gap: 10px;
+  margin: 14px 0 0;
   padding: 0;
   list-style: none;
-  font-size: 0.93rem;
+  font-size: 0.92rem;
 }
 
 .footer-list a {
-  color: var(--text);
+  color: var(--ink);
   text-decoration: none;
-  transition: color 160ms ease;
+  transition: color 180ms ease;
 }
 
 .footer-list a:hover {
-  color: var(--primary);
+  color: var(--brand-coral);
 }
 
-.footer-list-plain {
-  color: var(--muted);
+.footer-list-plain,
+.footer-plain-item {
+  color: var(--ink-soft);
 }
 
-/* A button rather than an anchor, because it opens the sign-in view instead
-   of navigating anywhere — styled to sit level with the real links. */
+/* A button rather than an anchor, because it opens the sign-in view instead of
+   navigating anywhere — styled to sit level with the real links. */
 .footer-link-button {
   padding: 0;
   border: none;
   background: none;
-  font-size: inherit;
-  color: var(--text);
+  font: inherit;
+  color: var(--ink);
   cursor: pointer;
-  transition: color 160ms ease;
+  transition: color 180ms ease;
 }
 
 .footer-link-button:hover {
-  color: var(--primary);
+  color: var(--brand-coral);
 }
 
 .footer-bottom {
-  margin: 28px 0 0;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(15, 21, 32, 0.07);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
 }
 
-/* ---------- Landing: motion ---------- */
-
-/* Entrance: each block rises a little as it fades, staggered top to bottom so
-   the eye is led down to the button. `both` holds the from-state during the
-   delay, so nothing flashes in before its turn. */
-@keyframes landing-rise {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+.footer-bottom p {
+  margin: 0;
 }
 
-@keyframes landing-pulse {
+/* ---------- Landing: motion ----------
+   Entrance, scroll reveals and card hover are Framer Motion, which reads
+   prefers-reduced-motion itself. What's left here is the CSS-driven motion:
+   the logo/live-dot breath and the button transitions. */
+
+@keyframes pulse-breathe {
   0%,
   100% {
     transform: scale(1);
@@ -613,100 +853,94 @@ select {
   }
 }
 
-.landing-reveal {
-  animation: landing-rise 620ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
-.landing-ticker-slot.landing-reveal {
-  animation-delay: 60ms;
-}
-.landing-tagline.landing-reveal {
-  animation-delay: 140ms;
-}
-.landing-description.landing-reveal {
-  animation-delay: 220ms;
-}
-.landing-cta.landing-reveal {
-  animation-delay: 300ms;
-}
-
-/* Nav jump links glide rather than teleport — switched off below alongside
-   everything else, since scroll motion is exactly what this setting is for. */
 html {
   scroll-behavior: smooth;
 }
 
-/* Asked not to be moved: drop the entrance, the breathing dots, the smooth
-   scroll and every hover travel. Removing an animation also drops its
-   fill-mode, so elements simply render in their normal, visible state. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
 
-  .landing-reveal,
-  .landing-dot,
-  .ticker-state-dot {
+  .markets-state-dot {
     animation: none;
   }
 
-  .landing-cta,
-  .landing-cta:hover,
-  .landing-cta:active,
-  .landing-nav,
-  .btn.landing-nav-cta,
-  .btn.landing-nav-cta:hover,
-  .feature-card,
-  .feature-card:hover {
+  .btn-pill,
+  .btn-dark:hover,
+  .btn-dark:active,
+  .btn-outline:hover,
+  .btn-ghost,
+  .landing-nav {
     transition: none;
     transform: none;
   }
 }
 
-@media (min-width: 640px) {
-  .landing-section {
-    padding: 56px 0;
-  }
+/* ---------- Landing: wider screens ---------- */
 
+@media (min-width: 640px) {
   .landing-section-inner {
-    padding: 0 32px;
+    padding: 0 28px;
   }
 
   .landing-nav-inner {
-    padding: 14px 32px;
+    padding: 16px 28px;
+  }
+
+  .landing-nav-signin {
+    display: inline-flex;
+  }
+
+  .hero-cta,
+  .hero-secondary {
+    flex: 0 0 auto;
+  }
+
+  .cta-panel {
+    padding: 56px 40px;
+  }
+
+  .feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .footer-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .landing-section {
+    padding: 76px 0;
+  }
+
+  .landing-hero {
+    padding: 44px 0 92px;
   }
 
   .landing-nav-links {
     display: flex;
   }
 
-  .landing-hero {
-    min-height: calc(90dvh - 60px);
+  /* The mockup's two-column hero: copy left, live markets panel right. */
+  .hero-layout {
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 52px;
   }
 
-  .landing-tagline {
-    font-size: clamp(3rem, 5.6vw, 4.2rem);
-  }
-
-  .landing-description {
-    font-size: 1.05rem;
-  }
-
-  .btn.landing-cta {
-    width: auto;
-    min-width: 240px;
-    padding-left: 32px;
-    padding-right: 32px;
-  }
-
-  .feature-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
+  .features-layout,
+  .preview-layout {
+    grid-template-columns: 340px 1fr;
+    align-items: start;
+    gap: 48px;
   }
 
   .footer-columns {
-    grid-template-columns: 1.6fr 1fr 1fr 1fr;
-    gap: 32px;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 40px;
   }
 }
 

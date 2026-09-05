@@ -46,7 +46,7 @@ tickersRouter.get('/market/live', async (req, res, next) => {
        GROUP BY m.ticker, t.company_name, t.exchange, m.price, m.day_change,
                 m.day_change_percent, m.fetched_at
        ORDER BY COUNT(w.id) DESC, t.company_name
-       LIMIT 3`
+       LIMIT 5`
     );
     res.json(rows);
   } catch (err) {

@@ -1,22 +1,27 @@
+import PulseLogo from './PulseLogo.jsx';
+
 const REPO_URL = 'https://github.com/Prerna2024-cyber/Pulse';
 
-// Deliberately no legal or regulatory column: Pulse is a hackathon project,
-// not a registered service, and inventing a privacy policy or an advisory
-// disclaimer would be dressing it up as something it isn't. Every link here
-// goes somewhere real — the two in-page sections, and the repo itself.
+// The mockup's footer had a Company column (About, Blog, Careers, Contact), a
+// Legal column (Privacy Policy, Terms of Service, Disclaimer) and four social
+// icons. None of those exist: there's no company, no policies, and no accounts
+// on X, LinkedIn or YouTube. Inventing them would dress a hackathon project up
+// as a registered service, so what's left is the two real sections, the
+// exchanges Pulse covers, and the repo.
+//
+// Exchange names stay plain text rather than links — pointing them at the real
+// exchanges would imply an affiliation that doesn't exist.
 export default function LandingFooter({ onGetStarted }) {
   return (
     <footer className="landing-footer">
       <div className="landing-section-inner">
         <div className="footer-columns">
           <div className="footer-brand">
-            <p className="landing-wordmark">
-              <span className="landing-dot" aria-hidden="true" />
-              Pulse
-            </p>
-            <p className="footer-tagline muted">
-              Know what actually changed, not just what moved.
-            </p>
+            <PulseLogo animate={false} />
+            <p className="footer-tagline">Know what actually changed, not just what moved.</p>
+            <a className="footer-social" href={REPO_URL} target="_blank" rel="noreferrer">
+              <span aria-hidden="true">↗</span> GitHub
+            </a>
           </div>
 
           <div className="footer-column">
@@ -38,9 +43,6 @@ export default function LandingFooter({ onGetStarted }) {
 
           <div className="footer-column">
             <h3 className="footer-heading">Markets</h3>
-            {/* Plain text, not links: these are the exchanges Pulse covers,
-                and pointing them at the real exchanges would imply an
-                affiliation that doesn't exist. */}
             <ul className="footer-list footer-list-plain">
               <li>NSE — India</li>
               <li>BSE — India</li>
@@ -56,12 +58,15 @@ export default function LandingFooter({ onGetStarted }) {
                   Source on GitHub
                 </a>
               </li>
-              <li className="muted">React · Node · Postgres</li>
+              <li className="footer-plain-item">React · Node · Postgres</li>
             </ul>
           </div>
         </div>
 
-        <p className="footer-bottom muted small">Built for the Groww Code 2026 hackathon.</p>
+        <div className="footer-bottom">
+          <p>© 2026 Pulse</p>
+          <p>Built for the Groww Code 2026 hackathon.</p>
+        </div>
       </div>
     </footer>
   );
