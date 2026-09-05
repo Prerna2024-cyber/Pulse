@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { pool, getTrackedTickers, upsertMarketData } from './db.js';
+import { pool, getTrackedTickers, recordQuotes } from './db.js';
 import { fetchIndianQuotes } from './indianStockApi.js';
 import { fetchUSQuotes } from './twelveData.js';
 
@@ -57,8 +57,8 @@ async function pollGroup(group) {
     return;
   }
 
-  await upsertMarketData(quotes);
-  console.log(`[worker:${group.name}] upserted ${quotes.length}/${active.length} tracked tickers`);
+  await recordQuotes(quotes);
+  console.log(`[worker:${group.name}] recorded ${quotes.length}/${active.length} tracked tickers`);
 }
 
 async function warnAboutUnroutedExchanges() {

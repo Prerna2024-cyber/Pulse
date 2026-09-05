@@ -31,28 +31,80 @@ export async function getTrackedTickers() {
   return rows;
 }
 
-export async function upsertMarketData(quotes) {
+// Builds "($1, $2, ...), ($n, ...)" for a multi-row insert, pushing each row's
+// values onto `values` in step. Shared by both writes below so the two can't
+// drift out of sync on placeholder arithmetic.
+function buildRows(quotes, values, columnsFor) {
+  const columnCount = columnsFor(quotes[0]).length;
+  return quotes.map((q, i) => {
+    const base = i * columnCount;
+    values.push(...columnsFor(q));
+    return `(${Array.from({ length: columnCount }, (_, n) => `$${base + n + 1}`).join(', ')})`;
+  });
+}
+
+// One poll's quotes, written as one unit: market_data gets the latest reading
+// per ticker, price_history gets an appended row per ticker.
+//
+// Both happen in a single transaction. They're two statements describing the
+// same observation, and a history series with gaps where the upsert succeeded
+// but the append didn't would be quietly wrong in a way nothing would surface
+// later — the chart would just be missing points nobody could account for.
+export async function recordQuotes(quotes) {
   if (quotes.length === 0) return;
 
-  const COLUMNS = 6;
-  const values = [];
-  const placeholders = quotes.map((q, i) => {
-    const base = i * COLUMNS;
-    values.push(q.ticker, q.price, q.volume, q.dayChange ?? null, q.dayChangePercent ?? null, q.fetchedAt);
-    return `(${Array.from({ length: COLUMNS }, (_, n) => `$${base + n + 1}`).join(', ')})`;
-  });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  await pool.query(
-    `
-    INSERT INTO market_data (ticker, price, volume, day_change, day_change_percent, fetched_at)
-    VALUES ${placeholders.join(', ')}
-    ON CONFLICT (ticker)
-    DO UPDATE SET price = EXCLUDED.price,
-                  volume = EXCLUDED.volume,
-                  day_change = EXCLUDED.day_change,
-                  day_change_percent = EXCLUDED.day_change_percent,
-                  fetched_at = EXCLUDED.fetched_at
-    `,
-    values
-  );
+    const latestValues = [];
+    const latestRows = buildRows(quotes, latestValues, (q) => [
+      q.ticker,
+      q.price,
+      q.volume,
+      q.dayChange ?? null,
+      q.dayChangePercent ?? null,
+      q.fetchedAt,
+    ]);
+
+    await client.query(
+      `
+      INSERT INTO market_data (ticker, price, volume, day_change, day_change_percent, fetched_at)
+      VALUES ${latestRows.join(', ')}
+      ON CONFLICT (ticker)
+      DO UPDATE SET price = EXCLUDED.price,
+                    volume = EXCLUDED.volume,
+                    day_change = EXCLUDED.day_change,
+                    day_change_percent = EXCLUDED.day_change_percent,
+                    fetched_at = EXCLUDED.fetched_at
+      `,
+      latestValues
+    );
+
+    // A row per poll regardless of whether the price moved, so the series has
+    // an even cadence — a flat stretch is data, and inferring it later from
+    // gaps would be guesswork.
+    const historyValues = [];
+    const historyRows = buildRows(quotes, historyValues, (q) => [
+      q.ticker,
+      q.price,
+      q.volume,
+      q.fetchedAt,
+    ]);
+
+    await client.query(
+      `INSERT INTO price_history (ticker, price, volume, recorded_at)
+       VALUES ${historyRows.join(', ')}`,
+      historyValues
+    );
+
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    // Always back to the pool, or a failing poll leaks a connection each time
+    // until the pool is exhausted and the worker wedges.
+    client.release();
+  }
 }
