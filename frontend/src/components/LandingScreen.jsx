@@ -1,4 +1,5 @@
 import LandingNav from './LandingNav.jsx';
+import HeroBackground from './HeroBackground.jsx';
 import LandingMarkets from './LandingMarkets.jsx';
 import LandingFeatures from './LandingFeatures.jsx';
 import LandingPreview from './LandingPreview.jsx';
@@ -25,6 +26,8 @@ export default function LandingScreen({ onGetStarted }) {
 
       <main>
         <section className="landing-section landing-hero">
+          <HeroBackground />
+
           <div className="landing-section-inner hero-layout">
             <div className="hero-copy">
               <Reveal as="p" className="hero-pill">

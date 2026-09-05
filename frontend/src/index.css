@@ -349,20 +349,82 @@ select {
   overflow: hidden;
 }
 
-/* Two soft coral washes standing in for the mockup's blobs — decorative only,
-   so they sit behind the content and never intercept a click. */
-.landing-hero::before {
-  content: '';
+/* ---------- Landing: animated hero background ----------
+   Decorative only: behind the content, never takes a pointer event, and moves
+   with transform/opacity alone so it stays off the layout path. */
+
+.hero-bg {
   position: absolute;
   inset: 0;
+  z-index: 0;
+  overflow: hidden;
   pointer-events: none;
-  background:
-    radial-gradient(46% 42% at 88% 12%, rgba(255, 140, 110, 0.22), transparent 70%),
-    radial-gradient(38% 36% at 68% 60%, rgba(240, 68, 127, 0.12), transparent 72%);
+}
+
+/* Soft colour washes rather than blurred circles — a radial gradient is
+   already soft, and skipping filter: blur() keeps this cheap to repaint on
+   every frame of the drift. */
+.hero-wash {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.hero-wash-a {
+  width: 62vw;
+  max-width: 720px;
+  aspect-ratio: 1;
+  top: -22%;
+  right: -10%;
+  background: radial-gradient(circle, rgba(255, 140, 110, 0.34), transparent 68%);
+  animation: hero-drift-a 26s ease-in-out infinite;
+}
+
+.hero-wash-b {
+  width: 48vw;
+  max-width: 560px;
+  aspect-ratio: 1;
+  top: 24%;
+  right: 22%;
+  background: radial-gradient(circle, rgba(240, 68, 127, 0.16), transparent 70%);
+  animation: hero-drift-b 34s ease-in-out infinite;
+}
+
+.hero-wash-still {
+  animation: none;
+}
+
+@keyframes hero-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-4%, 5%, 0) scale(1.09);
+  }
+}
+
+@keyframes hero-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, -6%, 0) scale(0.93);
+  }
+}
+
+.hero-bg-line {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 78%;
 }
 
 .hero-layout {
   position: relative;
+  z-index: 1;
   display: grid;
   gap: 34px;
 }
@@ -862,7 +924,8 @@ html {
     scroll-behavior: auto;
   }
 
-  .markets-state-dot {
+  .markets-state-dot,
+  .hero-wash {
     animation: none;
   }
 
