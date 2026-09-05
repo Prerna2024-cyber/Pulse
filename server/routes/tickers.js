@@ -107,11 +107,15 @@ tickersRouter.get('/tickers/sectors', loadUser, async (req, res, next) => {
 // Browse, optionally by sector (schema.sql query #2), scoped to the caller's market.
 tickersRouter.get('/tickers', loadUser, async (req, res, next) => {
   try {
-    const { sector } = req.query;
+    // A sector that's present but blank means "no sector matched", not "no
+    // filter at all". Treating '' as falsy silently dropped the WHERE clause
+    // and returned the entire catalog — 118 rows for an India user — which is
+    // the last thing a caller asking for one sector wants back.
+    const sector = typeof req.query.sector === 'string' ? req.query.sector.trim() : undefined;
     const exchanges = exchangesForMarket(req.user.preferredMarket);
     const params = [exchanges];
     let where = 'exchange = ANY($1::text[])';
-    if (sector) {
+    if (sector !== undefined) {
       params.push(sector);
       where += ` AND sector = $${params.length}`;
     }

@@ -1168,9 +1168,38 @@ html {
 /* ---------- Search ---------- */
 
 .search-bar {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* The result list overlays the page instead of sitting in the flow. In the
+   dashboard top bar an in-flow list pushed the greeting, stat cards and What
+   Changed panel below the fold the moment it appeared. */
+.search-overlay {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  max-height: min(56vh, 380px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 40px rgba(15, 21, 32, 0.14);
+}
+
+.search-note {
+  margin: 0;
+  padding: 12px 14px;
+}
+
+.btn-added {
+  background: var(--positive-bg);
+  color: var(--positive);
 }
 
 .search-bar input {
@@ -1184,7 +1213,6 @@ html {
 
 /* Shared by search results and trending — same list affordance, same row
    shape, so adding a stock looks identical wherever it's offered. */
-.search-results,
 .trending-list {
   list-style: none;
   margin: 0;
@@ -1193,6 +1221,13 @@ html {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+}
+
+/* Border and radius belong to .search-overlay now. */
+.search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .search-result-row,
