@@ -5,6 +5,9 @@
   --text: #1a1d23;
   --muted: #6b7280;
   --primary: #4f46e5;
+  /* Same colour as --primary, as channels, so shadows and focus rings can
+     tint from one source instead of hardcoding the hex three more times. */
+  --primary-rgb: 79, 70, 229;
   --primary-text: #ffffff;
   --positive: #15803d;
   --positive-bg: #ecfdf3;
@@ -115,27 +118,75 @@ select {
   font-size: 1rem;
 }
 
-/* ---------- Landing (pre-login) ---------- */
+/* ---------- Landing (pre-login) ----------
+   Mobile-first: every value below is the narrow-screen design, with one
+   min-width query at the end to open it up. Content is left-aligned rather
+   than centred — it reads as considered rather than as a pitch deck. */
 
-.landing-brand h1 {
-  font-size: 2.5rem;
-  margin-bottom: 6px;
+.landing {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 22px calc(40px + env(safe-area-inset-bottom, 0px));
+  /* A single soft wash of the accent: enough that the screen doesn't read as
+     a blank page, far too faint to compete with the type. */
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(var(--primary-rgb), 0.07), transparent 62%),
+    var(--bg);
 }
 
-.landing-tagline {
+.landing-inner {
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.landing-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* The one piece of motion that persists after the entrance — a slow, low
+   amplitude breath, on-theme for the name without drawing the eye. */
+.landing-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: landing-pulse 2.8s ease-in-out infinite;
+}
+
+/* The visual anchor. Scales with the viewport so it stays confident on a
+   360px phone without wrapping into a wall on a wide screen. */
+.landing-tagline {
+  margin: 22px 0 0;
+  font-size: clamp(2.05rem, 9.4vw, 3.1rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  color: var(--text);
+  text-wrap: balance;
 }
 
 .landing-description {
-  margin: 0;
-  line-height: 1.55;
+  margin: 18px 0 0;
+  max-width: 36ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--muted);
 }
 
 .market-badges {
   list-style: none;
-  margin: 0;
+  margin: 28px 0 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
@@ -146,11 +197,130 @@ select {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 9px 14px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 999px;
+  font-size: 0.9rem;
   font-weight: 600;
+}
+
+/* .btn.landing-cta, not .landing-cta: the shared .btn rules live further down
+   the file, so at equal specificity they would win on order alone and quietly
+   take back the radius and padding set here. */
+.btn.landing-cta {
+  margin-top: 32px;
+  width: 100%;
+  /* Comfortably past the 44px minimum tap target, since this is the only
+     thing to press on the screen. */
+  min-height: 54px;
+  font-size: 1.05rem;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(var(--primary-rgb), 0.22);
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.landing-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(var(--primary-rgb), 0.3);
+}
+
+.landing-cta:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
+}
+
+.landing-cta:focus-visible {
+  outline: 3px solid rgba(var(--primary-rgb), 0.4);
+  outline-offset: 3px;
+}
+
+/* Entrance: each block rises a little as it fades, staggered top to bottom so
+   the eye is led down to the button. `both` holds the from-state during the
+   delay, so nothing flashes in before its turn. */
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes landing-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+}
+
+.landing-reveal {
+  animation: landing-rise 620ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.landing-wordmark.landing-reveal {
+  animation-delay: 40ms;
+}
+.landing-tagline.landing-reveal {
+  animation-delay: 130ms;
+}
+.landing-description.landing-reveal {
+  animation-delay: 220ms;
+}
+.market-badges.landing-reveal {
+  animation-delay: 310ms;
+}
+.landing-cta.landing-reveal {
+  animation-delay: 400ms;
+}
+
+/* Asked not to be moved: drop the entrance, the breathing dot and the button's
+   travel. Removing the animation also drops its fill-mode, so every element
+   simply renders in its normal, fully visible state. */
+@media (prefers-reduced-motion: reduce) {
+  .landing-reveal,
+  .landing-dot {
+    animation: none;
+  }
+
+  .landing-cta,
+  .landing-cta:hover,
+  .landing-cta:active {
+    transition: none;
+    transform: none;
+  }
+}
+
+@media (min-width: 640px) {
+  .landing {
+    padding: 56px 32px;
+  }
+
+  .landing-inner {
+    max-width: 560px;
+  }
+
+  .landing-tagline {
+    font-size: clamp(2.6rem, 5vw, 3.4rem);
+  }
+
+  .landing-description {
+    font-size: 1.05rem;
+  }
+
+  .btn.landing-cta {
+    width: auto;
+    min-width: 240px;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
 }
 
 .market-choices {
