@@ -162,6 +162,7 @@ export default function DashboardScreen({
                 <WhatChangedPanel
                   data={diff}
                   error={diffError}
+                  market={market}
                   onViewAll={() => setView('changed')}
                 />
 

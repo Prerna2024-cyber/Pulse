@@ -7,7 +7,7 @@
     "server": "node server/index.js",
     "worker": "node worker/index.js",
     "worker:once": "RUN_ONCE=true node worker/index.js",
-    "test": "node --test lib/*.test.js"
+    "test": "node --test lib/*.test.js frontend/src/*.test.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

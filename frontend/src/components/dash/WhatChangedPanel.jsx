@@ -1,4 +1,6 @@
 import { changeSignal } from '../../changeSignal.js';
+import { marketStatus } from '../../marketHours.js';
+import MarketHoursBadge from './MarketHoursBadge.jsx';
 
 // The core feature, given the weight the mockup never gave it: first thing
 // under the greeting, full width, its own colour.
@@ -7,8 +9,9 @@ import { changeSignal } from '../../changeSignal.js';
 // count as having checked. Marking it seen stays with the deliberate act of
 // opening the What Changed view — otherwise every dashboard load would reset
 // the baseline and there'd never be anything left to report.
-export default function WhatChangedPanel({ data, error, onViewAll }) {
+export default function WhatChangedPanel({ data, error, market, onViewAll }) {
   const flagged = data ? data.changes.filter((c) => c.isMeaningful) : [];
+  const hours = marketStatus(market);
 
   return (
     <section className="panel panel-changed">
@@ -20,6 +23,7 @@ export default function WhatChangedPanel({ data, error, onViewAll }) {
           <p className="panel-sub">
             Only moves worth your attention — past ±2% on price, or double the usual volume.
           </p>
+          <MarketHoursBadge market={market} status={hours} />
         </div>
         <button className="link-button" onClick={onViewAll}>
           View all <span aria-hidden="true">→</span>
@@ -33,6 +37,11 @@ export default function WhatChangedPanel({ data, error, onViewAll }) {
       {!error && data !== null && flagged.length === 0 && (
         <p className="panel-empty muted">
           <span aria-hidden="true">✅</span> Nothing meaningful moved since you last checked.
+          {/* The likeliest reason for a quiet list, said plainly rather than
+              leaving someone to wonder whether the app is broken. Only while
+              shut: a change can still be waiting from an earlier session, so
+              this explains an empty list, it doesn't promise one. */}
+          {hours && !hours.isOpen && ' The market is closed, so prices aren\u2019t moving right now.'}
         </p>
       )}
 

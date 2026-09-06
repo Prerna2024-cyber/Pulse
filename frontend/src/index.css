@@ -1791,6 +1791,50 @@ html {
   border-color: rgba(255, 111, 94, 0.28);
 }
 
+/* Market-hours badge, under the What Changed sub-heading. The dot is a shape
+   cue (filled = trading, hollow = shut) and the pill spells the state out in
+   words, so the tint is the third signal rather than the only one. */
+.market-hours {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 9px;
+  margin: 9px 0 0;
+}
+
+.market-hours-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.market-hours-dot {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.market-hours-pill-positive {
+  background: var(--positive-bg);
+  border-color: rgba(21, 128, 61, 0.22);
+  color: var(--positive);
+}
+
+.market-hours-pill-neutral {
+  background: var(--neutral-bg);
+  border-color: var(--line);
+  color: var(--ink-soft);
+}
+
+.market-hours-detail {
+  font-size: 0.82rem;
+}
+
 .changed-list {
   display: flex;
   flex-direction: column;
