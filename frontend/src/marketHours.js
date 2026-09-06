@@ -178,3 +178,49 @@ const MARKET_BY_EXCHANGE = { NSE: 'India', BSE: 'India', NASDAQ: 'US' };
 export function marketStatusForExchange(exchange, at = new Date()) {
   return marketStatus(MARKET_BY_EXCHANGE[exchange], at);
 }
+
+// Mirrors lib/marketHours.js, which the worker uses to decide whether to poll.
+// The UI needs the same predicate to judge staleness honestly: data can only
+// be "out of date" during the window something was supposed to be writing it.
+export const POST_CLOSE_GRACE_MINUTES = 5;
+
+// Deliberately wider than marketStatus().isOpen — the worker keeps polling for
+// a few minutes past the bell to capture the settled close, so a reading taken
+// in that window is current, not late.
+//
+// Fails OPEN, same as the worker's copy: an unknown market is treated as being
+// polled, so a missing schedule can't silently suppress a real staleness
+// warning.
+export function isWithinPollWindow(market, at = new Date()) {
+  const schedule = SCHEDULES[market];
+  if (!schedule) return true;
+
+  const clock = wallClockIn(schedule.timeZone, at);
+  if (clock === null) return true;
+  const { weekday, minutes } = clock;
+
+  if (!isTradingDay(weekday)) return false;
+  return minutes >= schedule.opensAt && minutes < schedule.closesAt + POST_CLOSE_GRACE_MINUTES;
+}
+
+export function isWithinPollWindowForExchange(exchange, at = new Date()) {
+  return isWithinPollWindow(MARKET_BY_EXCHANGE[exchange], at);
+}
+
+// Names the session a past reading belongs to — "Friday's close" — but only
+// when it honestly was a close: the reading has to have been taken at or after
+// that day's closing bell, in the market's own timezone.
+//
+// Returns null otherwise, and the caller falls back to a plain age. That
+// matters when the worker stopped mid-session: a reading from Friday lunchtime
+// is not Friday's close, and calling it one would be the quiet kind of wrong.
+export function sessionCloseLabel(at, market) {
+  const schedule = SCHEDULES[market];
+  if (!schedule) return null;
+
+  const clock = wallClockIn(schedule.timeZone, at);
+  if (clock === null) return null;
+  if (!isTradingDay(clock.weekday) || clock.minutes < schedule.closesAt) return null;
+
+  return `${WEEKDAY_NAMES[clock.weekday]}'s close`;
+}

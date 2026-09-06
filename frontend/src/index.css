@@ -530,6 +530,19 @@ select {
   color: var(--notice);
 }
 
+/* A shut market is not a degraded one: neutral rather than amber, and the dot
+   stops breathing because nothing is arriving to breathe about. Higher
+   specificity than .markets-state-dot, so it wins wherever it sits in the
+   file. */
+.markets-state-closed {
+  color: var(--ink-soft);
+}
+
+.markets-state-closed .markets-state-dot {
+  animation: none;
+  opacity: 0.5;
+}
+
 .markets-rows {
   margin: 0;
   padding: 4px 0;

@@ -171,7 +171,7 @@ export default function DashboardScreen({
           {view === 'home' && (
             <div className="dash-grid">
               <div className="dash-col-main">
-                <StatCards summary={summary} mostWatched={mostWatched} />
+                <StatCards summary={summary} mostWatched={mostWatched} market={market} />
 
                 <WhatChangedPanel
                   data={diff}

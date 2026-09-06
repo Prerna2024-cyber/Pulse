@@ -3,6 +3,7 @@ import { getLiveMarket } from '../api.js';
 import { dayChangeSignal } from '../dayChange.js';
 import { currencyForExchange } from '../currency.js';
 import { isStale } from '../timeAgo.js';
+import { isWithinPollWindowForExchange } from '../marketHours.js';
 
 // The "Markets today" panel from the mockup, wired to real data.
 //
@@ -34,15 +35,24 @@ export default function LandingMarkets() {
       row.fetchedAt && (!latest || new Date(row.fetchedAt) > new Date(latest)) ? row.fetchedAt : latest,
     null
   );
-  const stale = freshest ? isStale(freshest) : true;
+  // These rows mix NSE and NASDAQ, so the badge asks whether *anything* on
+  // show is currently being polled. If nothing is, the data can't be late —
+  // the markets are shut, which is a third state, not a degraded "Delayed".
+  const polling = rows.some((row) => isWithinPollWindowForExchange(row.exchange));
+  const stale = freshest ? isStale(freshest, polling) : true;
+
+  // Word and colour together, never colour alone — same rule as the rest of
+  // the app. Only "Live" earns the breathing dot; the other two are static.
+  const state = !polling ? 'closed' : stale ? 'stale' : 'live';
+  const stateLabel = { closed: 'Closed', stale: 'Delayed', live: 'Live' }[state];
 
   return (
     <div className="markets-panel">
       <div className="markets-panel-head">
         <span className="markets-panel-title">Markets today</span>
-        <span className={`markets-state${stale ? ' markets-state-stale' : ''}`}>
+        <span className={`markets-state markets-state-${state}`}>
           <span className="markets-state-dot" aria-hidden="true" />
-          {stale ? 'Delayed' : 'Live'}
+          {stateLabel}
         </span>
       </div>
 

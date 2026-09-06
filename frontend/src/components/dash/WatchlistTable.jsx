@@ -1,7 +1,7 @@
 import { timeAgo, isStale } from '../../timeAgo.js';
 import { dayChangeSignal } from '../../dayChange.js';
 import { dayRangeItems } from '../../dayRange.js';
-import { marketStatusForExchange } from '../../marketHours.js';
+import { marketStatusForExchange, isWithinPollWindowForExchange } from '../../marketHours.js';
 
 // The watchlist as the mockup's table, minus the Chart column: sparklines need
 // a price history and market_data keeps exactly one row per ticker, so there
@@ -48,7 +48,12 @@ export default function WatchlistTable({ items, currency, error, removingTicker,
         </thead>
         <tbody>
           {items.map((item) => {
-            const stale = item.price != null && isStale(item.fetchedAt);
+            // Scoped to this row's own exchange, like the session label below:
+            // a price is only overdue while its market is being polled. Over a
+            // weekend every row would otherwise carry a warning for data that
+            // is exactly as current as it can be.
+            const rowPolling = isWithinPollWindowForExchange(item.exchange);
+            const stale = item.price != null && isStale(item.fetchedAt, rowPolling);
             const day = dayChangeSignal(item.dayChange, item.dayChangePercent);
             const range = dayRangeItems(item);
             // Scoped to this row's own exchange, not the viewer's selected
