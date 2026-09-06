@@ -6,9 +6,10 @@
 // per poll, same batching approach as the Indian fetcher.
 
 import { toFiniteOrNull } from '../lib/quote.js';
+import { positiveIntFromEnv } from '../lib/env.js';
 
 const API_KEY = process.env.TWELVE_DATA_API_KEY;
-const REQUEST_TIMEOUT_MS = Number(process.env.TWELVE_DATA_TIMEOUT_MS || 15000);
+const REQUEST_TIMEOUT_MS = positiveIntFromEnv('TWELVE_DATA_TIMEOUT_MS', 15000);
 
 // tickers: [{ ticker, exchange }] where exchange is 'NASDAQ'.
 export async function fetchUSQuotes(tickers) {

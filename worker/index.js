@@ -4,6 +4,7 @@ import { installProcessGuards } from '../lib/processGuards.js';
 import { fetchIndianQuotes } from './indianStockApi.js';
 import { fetchUSQuotes } from './twelveData.js';
 import { isWithinPollWindow, marketStatus, POST_CLOSE_GRACE_MINUTES } from '../lib/marketHours.js';
+import { positiveIntFromEnv } from '../lib/env.js';
 
 // This process runs unattended for hours. A stray rejection anywhere in a
 // poll cycle would otherwise end it silently and it would never come back.
@@ -31,8 +32,8 @@ installProcessGuards('worker', { exitOnUncaught: SUPERVISED });
 // credits/day. The Indian side drops from ~8,640 requests/day to ~2,250 for
 // the same reason. Both numbers scale with ticker count, so they are a
 // starting margin rather than a permanent one.
-const INDIA_POLL_INTERVAL_MS = Number(process.env.INDIA_POLL_INTERVAL_MS || 60 * 1000);
-const US_POLL_INTERVAL_MS = Number(process.env.US_POLL_INTERVAL_MS || 5 * 60 * 1000);
+const INDIA_POLL_INTERVAL_MS = positiveIntFromEnv('INDIA_POLL_INTERVAL_MS', 60 * 1000);
+const US_POLL_INTERVAL_MS = positiveIntFromEnv('US_POLL_INTERVAL_MS', 5 * 60 * 1000);
 
 // Comma-separated exchange codes to leave out of this run entirely — e.g.
 // DISABLE_EXCHANGES=NASDAQ to run India-only and avoid spending Alpha

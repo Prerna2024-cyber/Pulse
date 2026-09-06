@@ -26,13 +26,14 @@
 // lose every quote in it. Now each ticker succeeds or fails on its own.
 
 import { toFiniteOrNull } from '../lib/quote.js';
+import { positiveIntFromEnv } from '../lib/env.js';
 
 const BASE_URL = process.env.INDIAN_STOCK_API_BASE_URL || 'http://localhost:8787';
-const REQUEST_TIMEOUT_MS = Number(process.env.INDIAN_STOCK_API_TIMEOUT_MS || 15000);
+const REQUEST_TIMEOUT_MS = positiveIntFromEnv('INDIAN_STOCK_API_TIMEOUT_MS', 15000);
 
 // Enough parallelism to keep a poll quick without opening a burst of sockets
 // at the upstream worker all at once.
-const MAX_CONCURRENT = Number(process.env.INDIAN_STOCK_API_CONCURRENCY || 4);
+const MAX_CONCURRENT = positiveIntFromEnv('INDIAN_STOCK_API_CONCURRENCY', 4);
 
 const SUFFIX_BY_EXCHANGE = { NSE: '.NS', BSE: '.BO' };
 

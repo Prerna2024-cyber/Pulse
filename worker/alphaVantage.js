@@ -12,9 +12,11 @@
 // sequentially with a delay (tune ALPHA_VANTAGE_DELAY_MS) in case your key is
 // on an older/higher-limit plan.
 
+import { positiveIntFromEnv } from '../lib/env.js';
+
 const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
-const DELAY_MS = Number(process.env.ALPHA_VANTAGE_DELAY_MS || 12000);
-const REQUEST_TIMEOUT_MS = Number(process.env.ALPHA_VANTAGE_TIMEOUT_MS || 15000);
+const DELAY_MS = positiveIntFromEnv('ALPHA_VANTAGE_DELAY_MS', 12000);
+const REQUEST_TIMEOUT_MS = positiveIntFromEnv('ALPHA_VANTAGE_TIMEOUT_MS', 15000);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
