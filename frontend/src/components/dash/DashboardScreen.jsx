@@ -3,6 +3,7 @@ import { getWatchlist, addTicker, removeTicker, peekDiff, getTrending } from '..
 import { currencyForMarket } from '../../currency.js';
 import { useAutoRefresh } from '../../useAutoRefresh.js';
 import { greeting } from '../../greeting.js';
+import { marketStatus } from '../../marketHours.js';
 import { watchlistSummary, movementPhrase, stockCountPhrase } from '../../watchlistSummary.js';
 import Sidebar from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
@@ -40,6 +41,13 @@ export default function DashboardScreen({
   const [diff, setDiff] = useState(null);
   const [diffError, setDiffError] = useState(null);
   const [mostWatched, setMostWatched] = useState(null);
+  // Market status is a pure function of the clock, so it needs re-evaluating
+  // as time passes even though no request is involved. It rides the existing
+  // 60-second cycle below rather than starting a timer of its own — same
+  // cadence, and it inherits useAutoRefresh's visibility behaviour, so a tab
+  // left open overnight re-checks the moment it's looked at again instead of
+  // sitting on a stale "Live".
+  const [hours, setHours] = useState(() => marketStatus(market));
 
   // Each loader replaces data in place and never blanks it first, so the
   // 60-second refresh below can reuse them without the screen flashing back
@@ -94,10 +102,16 @@ export default function DashboardScreen({
     loadTrending();
   }, [loadTrending, market, listVersion]);
 
-  const refreshAll = useCallback(
-    () => Promise.all([refresh(), loadDiff(), loadTrending()]),
-    [refresh, loadDiff, loadTrending]
-  );
+  // Switching market has to re-evaluate immediately rather than wait out the
+  // rest of a tick, otherwise India's hours linger on a screen showing NASDAQ.
+  useEffect(() => {
+    setHours(marketStatus(market));
+  }, [market]);
+
+  const refreshAll = useCallback(() => {
+    setHours(marketStatus(market));
+    return Promise.all([refresh(), loadDiff(), loadTrending()]);
+  }, [refresh, loadDiff, loadTrending, market]);
 
   // Matches the worker's India cadence — polling faster than the data is
   // written would just re-fetch the same numbers. US tickers are written every
@@ -162,7 +176,7 @@ export default function DashboardScreen({
                 <WhatChangedPanel
                   data={diff}
                   error={diffError}
-                  market={market}
+                  hours={hours}
                   onViewAll={() => setView('changed')}
                 />
 

@@ -1,13 +1,13 @@
-// Whether the user's market is trading right now, and when it next flips.
+// Whether the user's market is trading right now, and when it next opens.
 //
 // Same rule as changeSignal.js and dayChange.js: icon + colour together, never
-// colour alone. The filled/hollow dot is a shape difference rather than a
-// red/green pair, and the word ("Open"/"Closed") says it outright, so the
-// badge still reads correctly in monochrome or to a screen reader.
+// colour alone. Open and closed are two different shapes on screen — a compact
+// pill against a full-width banner — and each says its state in words, so the
+// green/grey is the third cue rather than the only one.
 //
 // NOT HANDLED: market holidays. There is no holiday calendar here, so on a
 // trading holiday — Diwali, Republic Day, Thanksgiving, Good Friday — this
-// will report the market as "Open" when it is in fact shut. That is a
+// will incorrectly show the market as open when it is in fact shut. That is a
 // deliberate scope decision, not an oversight: a correct calendar is a
 // per-exchange, per-year list that goes stale silently and is wrong in exactly
 // the years nobody remembered to update it. Weekends are handled, and they are
@@ -17,14 +17,28 @@
 //
 // Timezone comes from the market, not the viewer — someone watching NASDAQ
 // from Bangalore should see the New York session, not their own clock.
-// Exchange hours mirror the markets in lib/market.js (India = NSE/BSE, which
-// keep identical hours; US = NASDAQ).
+// Exchanges mirror EXCHANGES_BY_MARKET in lib/market.js, duplicated rather
+// than imported because frontend/ is its own package (same reason as
+// currency.js). India is labelled NSE/BSE rather than just NSE because a
+// watchlist there really can hold both, and they keep identical hours.
 const SCHEDULES = {
   // 9:15am–3:30pm IST
-  India: { timeZone: 'Asia/Kolkata', zoneLabel: 'IST', opensAt: 9 * 60 + 15, closesAt: 15 * 60 + 30 },
+  India: {
+    exchange: 'NSE/BSE',
+    timeZone: 'Asia/Kolkata',
+    zoneLabel: 'IST',
+    opensAt: 9 * 60 + 15,
+    closesAt: 15 * 60 + 30,
+  },
   // 9:30am–4:00pm ET. "ET" rather than EST/EDT on purpose: it's correct in
   // both halves of the year, so nothing here has to track US DST changeovers.
-  US: { timeZone: 'America/New_York', zoneLabel: 'ET', opensAt: 9 * 60 + 30, closesAt: 16 * 60 },
+  US: {
+    exchange: 'NASDAQ',
+    timeZone: 'America/New_York',
+    zoneLabel: 'ET',
+    opensAt: 9 * 60 + 30,
+    closesAt: 16 * 60,
+  },
 };
 
 const WEEKDAY_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
@@ -69,6 +83,10 @@ function dayWord(weekday, daysAhead) {
 
 // Returns null for a market with no schedule, so an unrecognised
 // preferred_market renders nothing rather than a confidently wrong "Closed".
+//
+// `detail` is a fragment rather than a whole sentence: the two states are
+// worded differently around it (a banner sentence vs. a compact pill suffix)
+// and that phrasing belongs with the markup, not here.
 export function marketStatus(market, at = new Date()) {
   const schedule = SCHEDULES[market];
   if (!schedule) return null;
@@ -80,13 +98,14 @@ export function marketStatus(market, at = new Date()) {
   if (isOpen) {
     return {
       isOpen: true,
+      exchange: schedule.exchange,
       icon: '●',
       tone: 'positive',
-      label: 'Open',
+      label: 'Live',
       // Deliberately no countdown. A duration would have to be computed across
       // the DST changeover to be right, and the clock time is what someone
       // actually plans around anyway.
-      detail: `Closes today at ${formatClock(schedule.closesAt)} ${schedule.zoneLabel}`,
+      detail: `closes ${formatClock(schedule.closesAt)} ${schedule.zoneLabel}`,
     };
   }
 
@@ -98,9 +117,10 @@ export function marketStatus(market, at = new Date()) {
 
   return {
     isOpen: false,
+    exchange: schedule.exchange,
     icon: '○',
     tone: 'neutral',
     label: 'Closed',
-    detail: `Opens ${dayWord(weekday, daysAhead)} at ${formatClock(schedule.opensAt)} ${schedule.zoneLabel}`,
+    detail: `Opens ${dayWord(weekday, daysAhead)} ${formatClock(schedule.opensAt)} ${schedule.zoneLabel}`,
   };
 }

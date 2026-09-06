@@ -1791,47 +1791,90 @@ html {
   border-color: rgba(255, 111, 94, 0.28);
 }
 
-/* Market-hours badge, under the What Changed sub-heading. The dot is a shape
-   cue (filled = trading, hollow = shut) and the pill spells the state out in
-   words, so the tint is the third signal rather than the only one. */
-.market-hours {
+/* ---------- Market status, inside What Changed ----------
+   Two states share one slot. Open is a compact pill; closed is a banner that
+   spans the panel. The state is carried by the shape, the words ("Live" /
+   "is closed") and an icon before the colour is considered — so it still
+   reads in monochrome. Enter/exit is Framer Motion (MarketStatus.jsx), which
+   reads prefers-reduced-motion itself; the breathing dot below is CSS, with
+   its own reduced-motion override alongside it. */
+
+.market-status {
+  margin: 14px 0 2px;
+}
+
+.market-live {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 9px;
-  margin: 9px 0 0;
+  margin: 0;
 }
 
-.market-hours-pill {
+.market-live-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
+  gap: 7px;
+  padding: 3px 11px 3px 9px;
   border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: 0.82rem;
+  background: var(--positive-bg);
+  border: 1px solid rgba(21, 128, 61, 0.22);
+  color: var(--positive);
+  font-size: 0.78rem;
   font-weight: 700;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 
-.market-hours-dot {
-  font-size: 0.7rem;
-  line-height: 1;
+/* Same size, colour source and keyframe as the landing page's Live badge, so
+   the one piece of always-on motion in the app looks like one idea. */
+.market-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-breathe 2.6s ease-in-out infinite;
 }
 
-.market-hours-pill-positive {
-  background: var(--positive-bg);
-  border-color: rgba(21, 128, 61, 0.22);
-  color: var(--positive);
+/* Colocated with the rule it turns off, not pooled into the landing block
+   further up: a media query adds no specificity, so an override written
+   earlier in the file loses to the animation declared here regardless of
+   which one is inside the query. */
+@media (prefers-reduced-motion: reduce) {
+  .market-live-dot {
+    animation: none;
+  }
 }
 
-.market-hours-pill-neutral {
+.market-live-detail {
+  font-size: 0.82rem;
+}
+
+.market-closed {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 14px;
+  border-radius: 13px;
   background: var(--neutral-bg);
-  border-color: var(--line);
+  border: 1px solid var(--line);
+}
+
+.market-closed-icon {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
   color: var(--ink-soft);
 }
 
-.market-hours-detail {
+.market-closed-line {
+  margin: 0;
+  font-size: 0.89rem;
+  font-weight: 600;
+}
+
+.market-closed-note {
+  margin: 2px 0 0;
   font-size: 0.82rem;
 }
 

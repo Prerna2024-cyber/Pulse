@@ -12,22 +12,23 @@ test('India is open mid-session', () => {
   // 04:00Z = 09:30 IST
   const status = marketStatus('India', at('2026-09-07T04:00:00Z'));
   assert.equal(status.isOpen, true);
-  assert.equal(status.label, 'Open');
-  assert.equal(status.detail, 'Closes today at 3:30 PM IST');
+  assert.equal(status.label, 'Live');
+  assert.equal(status.exchange, 'NSE/BSE');
+  assert.equal(status.detail, 'closes 3:30 PM IST');
 });
 
 test('India before the bell says it opens today', () => {
   // 03:30Z = 09:00 IST
   const status = marketStatus('India', at('2026-09-07T03:30:00Z'));
   assert.equal(status.isOpen, false);
-  assert.equal(status.detail, 'Opens today at 9:15 AM IST');
+  assert.equal(status.detail, 'Opens today 9:15 AM IST');
 });
 
 test('India after the close rolls to tomorrow', () => {
   // 10:30Z = 16:00 IST, Monday
   const status = marketStatus('India', at('2026-09-07T10:30:00Z'));
   assert.equal(status.isOpen, false);
-  assert.equal(status.detail, 'Opens tomorrow at 9:15 AM IST');
+  assert.equal(status.detail, 'Opens tomorrow 9:15 AM IST');
 });
 
 test('the open boundary counts as open and the close boundary does not', () => {
@@ -39,15 +40,24 @@ test('the open boundary counts as open and the close boundary does not', () => {
 test('Friday after the close skips the weekend to Monday', () => {
   const status = marketStatus('India', at('2026-09-04T12:00:00Z'));
   assert.equal(status.isOpen, false);
-  assert.equal(status.detail, 'Opens Monday at 9:15 AM IST');
+  assert.equal(status.detail, 'Opens Monday 9:15 AM IST');
 });
 
 test('Saturday names Monday rather than tomorrow', () => {
-  assert.equal(marketStatus('India', at('2026-09-05T06:00:00Z')).detail, 'Opens Monday at 9:15 AM IST');
+  assert.equal(marketStatus('India', at('2026-09-05T06:00:00Z')).detail, 'Opens Monday 9:15 AM IST');
 });
 
 test('Sunday opens tomorrow', () => {
-  assert.equal(marketStatus('India', at('2026-09-06T06:00:00Z')).detail, 'Opens tomorrow at 9:15 AM IST');
+  assert.equal(marketStatus('India', at('2026-09-06T06:00:00Z')).detail, 'Opens tomorrow 9:15 AM IST');
+});
+
+test('the closed banner sentence reads as specified', () => {
+  // How MarketStatus composes it: "<exchange> is closed. <detail>."
+  const status = marketStatus('India', at('2026-09-05T06:00:00Z'));
+  assert.equal(
+    `${status.exchange} is closed. ${status.detail}.`,
+    'NSE/BSE is closed. Opens Monday 9:15 AM IST.'
+  );
 });
 
 test('a weekday inside Indian hours is still closed for the US market', () => {
@@ -64,11 +74,10 @@ test('US hours follow daylight saving without a hardcoded offset', () => {
   assert.equal(marketStatus('US', at('2026-01-07T14:30:00Z')).isOpen, true);
 });
 
-test('US close is reported in ET', () => {
-  assert.equal(
-    marketStatus('US', at('2026-09-07T14:00:00Z')).detail,
-    'Closes today at 4:00 PM ET'
-  );
+test('US is labelled NASDAQ and reports its close in ET', () => {
+  const status = marketStatus('US', at('2026-09-07T14:00:00Z'));
+  assert.equal(status.exchange, 'NASDAQ');
+  assert.equal(status.detail, 'closes 4:00 PM ET');
 });
 
 test('an icon and a word carry the state, not colour alone', () => {
@@ -76,6 +85,7 @@ test('an icon and a word carry the state, not colour alone', () => {
   const closed = marketStatus('India', at('2026-09-07T10:30:00Z'));
   assert.notEqual(open.icon, closed.icon);
   assert.notEqual(open.label, closed.label);
+  assert.notEqual(open.tone, closed.tone);
 });
 
 test('an unknown market returns null rather than a wrong "Closed"', () => {
