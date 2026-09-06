@@ -54,6 +54,62 @@ function buildRows(quotes, values, columnsFor) {
   });
 }
 
+// market_data.price and price_history.price are NUMERIC(12, 4) — eight digits
+// before the point — and volume is BIGINT. A value outside those bounds isn't
+// merely wrong, it aborts the INSERT, and since a poll is written as one
+// transaction that means one bad ticker discards every good quote alongside it.
+//
+// Verified against the live database: 1e15 and Infinity both raise "numeric
+// field overflow", and NaN is *accepted* and stored as the literal NaN, which
+// then renders as "NaN" in the watchlist. So finiteness alone isn't enough —
+// the range matters too.
+const MAX_NUMERIC_12_4 = 99999999.9999;
+const MAX_BIGINT = 9223372036854775807;
+
+function isStorablePrice(value) {
+  return Number.isFinite(value) && Math.abs(value) <= MAX_NUMERIC_12_4;
+}
+
+function isStorableVolume(value) {
+  return Number.isFinite(value) && value >= 0 && value <= MAX_BIGINT;
+}
+
+// Drops quotes the database could not accept, so one unusable reading costs
+// that ticker rather than the whole poll. This is the backstop, not the first
+// line of defence — both fetchers already reject non-numeric price/volume, and
+// anything caught here means a fetcher let something through, so it's logged
+// per ticker rather than counted silently.
+//
+// Only price and volume are checked: they're NOT NULL and every row needs
+// them. The optional columns all pass through toFiniteOrNull in the fetchers,
+// so they're already either a finite number or null — but they share the same
+// NUMERIC(12, 4) bound, so an out-of-range one is nulled rather than allowed
+// to abort the write.
+const OPTIONAL_NUMERIC_FIELDS = ['dayChange', 'dayChangePercent', 'dayOpen', 'previousClose', 'dayHigh', 'dayLow'];
+
+export function rejectUnstorableQuotes(quotes) {
+  const storable = [];
+  for (const q of quotes) {
+    if (!isStorablePrice(Number(q.price)) || !isStorableVolume(Number(q.volume))) {
+      console.error(
+        `[db] ${q.ticker}: dropped — price/volume outside what the schema can store ` +
+          `(price=${q.price}, volume=${q.volume})`
+      );
+      continue;
+    }
+    const cleaned = { ...q };
+    for (const field of OPTIONAL_NUMERIC_FIELDS) {
+      const value = cleaned[field];
+      if (value !== null && value !== undefined && !isStorablePrice(Number(value))) {
+        console.error(`[db] ${q.ticker}: ${field}=${value} is out of range — storing null instead`);
+        cleaned[field] = null;
+      }
+    }
+    storable.push(cleaned);
+  }
+  return storable;
+}
+
 // One poll's quotes, written as one unit: market_data gets the latest reading
 // per ticker, price_history gets an appended row per ticker.
 //
@@ -61,7 +117,8 @@ function buildRows(quotes, values, columnsFor) {
 // same observation, and a history series with gaps where the upsert succeeded
 // but the append didn't would be quietly wrong in a way nothing would surface
 // later — the chart would just be missing points nobody could account for.
-export async function recordQuotes(quotes) {
+export async function recordQuotes(rawQuotes) {
+  const quotes = rejectUnstorableQuotes(rawQuotes);
   if (quotes.length === 0) return;
 
   const client = await pool.connect();

@@ -52,8 +52,14 @@ async function fetchOne({ ticker, exchange }, fetchedAt) {
   }
 
   const stock = body.data;
-  if (stock.last_price == null || stock.volume == null) {
-    throw new Error('missing price or volume in response');
+  // Same validation twelveData.js already did. `== null` alone let a
+  // non-numeric price through — res=val instead of res=num returns
+  // {value, unit} objects, for instance — and an unstorable value used to
+  // fail the whole poll's INSERT, taking every other ticker's quote with it.
+  const price = toFiniteOrNull(stock.last_price);
+  const volume = toFiniteOrNull(stock.volume);
+  if (price === null || volume === null) {
+    throw new Error('missing or non-numeric price/volume in response');
   }
 
   // Everything past price and volume is optional — a quote without a day
@@ -61,8 +67,8 @@ async function fetchOne({ ticker, exchange }, fetchedAt) {
   // normalized to null rather than dropping the row.
   return {
     ticker,
-    price: stock.last_price,
-    volume: Math.trunc(stock.volume),
+    price,
+    volume: Math.trunc(volume),
     dayChange: toFiniteOrNull(stock.change),
     dayChangePercent: toFiniteOrNull(stock.percent_change),
     dayOpen: toFiniteOrNull(stock.open),
