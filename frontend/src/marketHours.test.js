@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { marketStatus } from './marketHours.js';
+import { marketStatus, marketStatusForExchange } from './marketHours.js';
 
 // Every instant here is written in UTC and converted by the module, so these
 // assertions hold whatever timezone the machine running them is set to.
@@ -91,4 +91,23 @@ test('an icon and a word carry the state, not colour alone', () => {
 test('an unknown market returns null rather than a wrong "Closed"', () => {
   assert.equal(marketStatus('Mars'), null);
   assert.equal(marketStatus(undefined), null);
+});
+
+test('an exchange resolves to its own market, not the viewer\'s', () => {
+  // 05:00Z is 10:30 IST (open) and 01:00 ET (closed). A NASDAQ row must read
+  // as closed here even though the viewer's Indian market is trading.
+  const at = new Date('2026-09-07T05:00:00Z');
+  assert.equal(marketStatusForExchange('NSE', at).isOpen, true);
+  assert.equal(marketStatusForExchange('BSE', at).isOpen, true);
+  assert.equal(marketStatusForExchange('NASDAQ', at).isOpen, false);
+});
+
+test('both Indian exchanges share one schedule', () => {
+  const at = new Date('2026-09-04T12:00:00Z');
+  assert.deepEqual(marketStatusForExchange('NSE', at), marketStatusForExchange('BSE', at));
+});
+
+test('an unknown exchange returns null so the row says nothing', () => {
+  assert.equal(marketStatusForExchange('LSE'), null);
+  assert.equal(marketStatusForExchange(undefined), null);
 });

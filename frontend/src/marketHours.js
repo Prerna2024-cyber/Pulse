@@ -46,19 +46,33 @@ const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', '
 
 const isTradingDay = (weekday) => weekday >= 1 && weekday <= 5;
 
+// Constructing an Intl.DateTimeFormat is the expensive part, and there are
+// only two of them, so they're built once and reused. This is called per
+// watchlist row now, not just once for the dashboard.
+const formatters = new Map();
+
+function formatterFor(timeZone) {
+  let formatter = formatters.get(timeZone);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      // h23 rather than hour12:false: the latter renders midnight as "24" on
+      // some engines, which would put the small hours a day out.
+      hourCycle: 'h23',
+    });
+    formatters.set(timeZone, formatter);
+  }
+  return formatter;
+}
+
 // The wall clock in the market's own timezone. Intl does the whole job —
 // including whichever DST offset applies on this date — so no offset is ever
 // hardcoded here.
 function wallClockIn(timeZone, at) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    // h23 rather than hour12:false: the latter renders midnight as "24" on
-    // some engines, which would put the small hours a day out.
-    hourCycle: 'h23',
-  }).formatToParts(at);
+  const parts = formatterFor(timeZone).formatToParts(at);
   const value = (type) => parts.find((p) => p.type === type).value;
   return {
     weekday: WEEKDAY_INDEX[value('weekday')],
@@ -123,4 +137,20 @@ export function marketStatus(market, at = new Date()) {
     label: 'Closed',
     detail: `Opens ${dayWord(weekday, daysAhead)} ${formatClock(schedule.opensAt)} ${schedule.zoneLabel}`,
   };
+}
+
+// Which market an exchange trades in, so a row can be labelled against its own
+// ticker's hours rather than whichever market the viewer happens to have
+// selected. In practice a watchlist is already scoped to one market and the
+// two always agree — this is here so the row stays right if that ever stops
+// being true, rather than silently labelling a NASDAQ row with NSE's clock.
+//
+// Mirrors MARKET_BY_EXCHANGE in currency.js and EXCHANGES_BY_MARKET in
+// lib/market.js, duplicated for the same reason they are.
+const MARKET_BY_EXCHANGE = { NSE: 'India', BSE: 'India', NASDAQ: 'US' };
+
+// null for an exchange with no known schedule — the caller then says nothing
+// rather than guessing at a session.
+export function marketStatusForExchange(exchange, at = new Date()) {
+  return marketStatus(MARKET_BY_EXCHANGE[exchange], at);
 }

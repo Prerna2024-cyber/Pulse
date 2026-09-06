@@ -2174,6 +2174,19 @@ html {
   gap: 6px;
 }
 
+/* Deliberately the quietest thing in the row: it clarifies which session the
+   figures above belong to, it isn't a warning about them. No colour and no
+   icon — the staleness warning on the price cell is the one that earns those. */
+.range-note {
+  margin-top: 1px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.85;
+}
+
 /* Fixed width so O/H/L line up and the figures form a clean column. */
 .range-key {
   min-width: 1.1em;

@@ -1,6 +1,7 @@
 import { timeAgo, isStale } from '../../timeAgo.js';
 import { dayChangeSignal } from '../../dayChange.js';
 import { dayRangeItems } from '../../dayRange.js';
+import { marketStatusForExchange } from '../../marketHours.js';
 
 // The watchlist as the mockup's table, minus the Chart column: sparklines need
 // a price history and market_data keeps exactly one row per ticker, so there
@@ -50,6 +51,17 @@ export default function WatchlistTable({ items, currency, error, removingTicker,
             const stale = item.price != null && isStale(item.fetchedAt);
             const day = dayChangeSignal(item.dayChange, item.dayChangePercent);
             const range = dayRangeItems(item);
+            // Scoped to this row's own exchange, not the viewer's selected
+            // market. A watchlist is already market-scoped so the two always
+            // agree today; keying off the row means it stays correct if that
+            // ever changes. Recomputed each render, which the 60-second
+            // refresh already drives.
+            const rowMarket = marketStatusForExchange(item.exchange);
+            // While the market is shut these figures are the last session's,
+            // not today's — a Sunday viewer would otherwise read Friday's
+            // range as today's. Only worth saying when there's a figure to
+            // qualify.
+            const lastSession = range.length > 0 && rowMarket !== null && !rowMarket.isOpen;
             return (
               <tr key={item.ticker}>
                 <td>
@@ -99,6 +111,9 @@ export default function WatchlistTable({ items, currency, error, removingTicker,
                           {entry.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </span>
                       ))}
+                      {/* A clarifier, not a warning: no icon, no colour, just
+                          quieter than the figures it qualifies. */}
+                      {lastSession && <span className="range-note">Last session</span>}
                     </span>
                   ) : (
                     <span className="muted small">—</span>
