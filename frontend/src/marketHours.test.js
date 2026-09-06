@@ -111,3 +111,21 @@ test('an unknown exchange returns null so the row says nothing', () => {
   assert.equal(marketStatusForExchange('LSE'), null);
   assert.equal(marketStatusForExchange(undefined), null);
 });
+
+test('the next-open search terminates for every day of the week', () => {
+  // This replaced an unbounded `while`: an unrecognised weekday made every
+  // comparison false, so the loop spun forever — and it runs during render,
+  // so that hung the tab rather than showing a wrong label.
+  for (let d = 1; d <= 14; d += 1) {
+    const when = new Date(Date.UTC(2026, 8, d, 22, 0));
+    assert.ok(marketStatus('India', when), `no status for day ${d}`);
+    assert.ok(marketStatus('US', when), `no status for day ${d}`);
+  }
+});
+
+test('an unreadable clock returns null rather than throwing mid-render', () => {
+  assert.equal(marketStatus('India', new Date('nonsense')), null);
+  assert.equal(marketStatus('India', 'yesterday'), null);
+  assert.equal(marketStatus('India', null), null);
+  assert.equal(marketStatusForExchange('NSE', new Date('nonsense')), null);
+});

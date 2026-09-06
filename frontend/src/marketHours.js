@@ -72,12 +72,22 @@ function formatterFor(timeZone) {
 // including whichever DST offset applies on this date — so no offset is ever
 // hardcoded here.
 function wallClockIn(timeZone, at) {
+  // An invalid Date makes formatToParts throw, which during render would take
+  // the dashboard down rather than degrade.
+  if (!(at instanceof Date) || Number.isNaN(at.getTime())) return null;
+
   const parts = formatterFor(timeZone).formatToParts(at);
-  const value = (type) => parts.find((p) => p.type === type).value;
-  return {
-    weekday: WEEKDAY_INDEX[value('weekday')],
-    minutes: Number(value('hour')) * 60 + Number(value('minute')),
-  };
+  const value = (type) => parts.find((p) => p.type === type)?.value;
+
+  // An unrecognised weekday used to become `undefined`, and every comparison
+  // downstream then silently evaluated false — including the loop condition in
+  // the next-open search, which spun forever. Caught here instead.
+  const weekday = WEEKDAY_INDEX[value('weekday')];
+  const hour = Number(value('hour'));
+  const minute = Number(value('minute'));
+  if (weekday === undefined || !Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+
+  return { weekday, minutes: hour * 60 + minute };
 }
 
 function formatClock(totalMinutes) {
@@ -86,6 +96,16 @@ function formatClock(totalMinutes) {
   const suffix = hour24 < 12 ? 'AM' : 'PM';
   const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
   return `${hour12}:${String(minute).padStart(2, '0')} ${suffix}`;
+}
+
+// How many days until the next trading day, counting today as 0. Bounded by a
+// week: the `while` this replaces spun forever if the predicate was never
+// satisfiable, which hangs the tab because this runs during render.
+function daysUntilNextTradingDay(weekday, startOffset) {
+  for (let ahead = startOffset; ahead <= startOffset + 7; ahead += 1) {
+    if (isTradingDay((weekday + ahead) % 7)) return ahead;
+  }
+  return null;
 }
 
 // How the next session is referred to relative to today, in market-local days.
@@ -105,7 +125,10 @@ export function marketStatus(market, at = new Date()) {
   const schedule = SCHEDULES[market];
   if (!schedule) return null;
 
-  const { weekday, minutes } = wallClockIn(schedule.timeZone, at);
+  const clock = wallClockIn(schedule.timeZone, at);
+  if (clock === null) return null;
+  const { weekday, minutes } = clock;
+
   const isOpen =
     isTradingDay(weekday) && minutes >= schedule.opensAt && minutes < schedule.closesAt;
 
@@ -124,10 +147,11 @@ export function marketStatus(market, at = new Date()) {
   }
 
   // Before the bell on a trading day the next session is still today;
-  // otherwise walk forward to the next weekday. The loop is bounded by the
-  // week — from Friday evening the furthest it ever runs is three days.
-  let daysAhead = isTradingDay(weekday) && minutes < schedule.opensAt ? 0 : 1;
-  while (!isTradingDay((weekday + daysAhead) % 7)) daysAhead += 1;
+  // otherwise walk forward to the next weekday. From Friday evening the
+  // furthest this ever runs is three days.
+  const startOffset = isTradingDay(weekday) && minutes < schedule.opensAt ? 0 : 1;
+  const daysAhead = daysUntilNextTradingDay(weekday, startOffset);
+  if (daysAhead === null) return null;
 
   return {
     isOpen: false,
