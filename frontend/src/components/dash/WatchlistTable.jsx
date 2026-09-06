@@ -1,5 +1,6 @@
 import { timeAgo, isStale } from '../../timeAgo.js';
 import { dayChangeSignal } from '../../dayChange.js';
+import { dayRangeItems } from '../../dayRange.js';
 
 // The watchlist as the mockup's table, minus the Chart column: sparklines need
 // a price history and market_data keeps exactly one row per ticker, so there
@@ -34,6 +35,9 @@ export default function WatchlistTable({ items, currency, error, removingTicker,
               Price
             </th>
             <th scope="col" className="col-num">
+              Day range
+            </th>
+            <th scope="col" className="col-num">
               Change
             </th>
             <th scope="col" className="col-action">
@@ -45,6 +49,7 @@ export default function WatchlistTable({ items, currency, error, removingTicker,
           {items.map((item) => {
             const stale = item.price != null && isStale(item.fetchedAt);
             const day = dayChangeSignal(item.dayChange, item.dayChangePercent);
+            const range = dayRangeItems(item);
             return (
               <tr key={item.ticker}>
                 <td>
@@ -76,6 +81,27 @@ export default function WatchlistTable({ items, currency, error, removingTicker,
                     </>
                   ) : (
                     <span className="muted small">waiting for price…</span>
+                  )}
+                </td>
+
+                {/* Secondary to the price by design: no currency symbol (it's
+                    the same instrument on the same row), lighter weight, and
+                    each figure appears only if it's actually known. */}
+                <td className="col-num">
+                  {range.length > 0 ? (
+                    <span className="cell-range">
+                      {range.map((entry) => (
+                        <span className="range-item" key={entry.key}>
+                          <span className="range-key" aria-hidden="true">
+                            {entry.key}
+                          </span>
+                          <span className="sr-only">{entry.label} </span>
+                          {entry.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="muted small">—</span>
                   )}
                 </td>
 

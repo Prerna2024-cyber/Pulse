@@ -15,7 +15,9 @@ watchlistRouter.get('/users/:username/watchlist', loadUser, async (req, res, nex
     const { rows } = await pool.query(
       `SELECT w.ticker, t.company_name AS "companyName", t.sector, t.exchange,
               m.price, m.volume, m.fetched_at AS "fetchedAt",
-              m.day_change AS "dayChange", m.day_change_percent AS "dayChangePercent"
+              m.day_change AS "dayChange", m.day_change_percent AS "dayChangePercent",
+              m.day_open AS "dayOpen", m.previous_close AS "previousClose",
+              m.day_high AS "dayHigh", m.day_low AS "dayLow"
        FROM watchlist_items w
        JOIN tickers t ON t.ticker = w.ticker
        LEFT JOIN market_data m ON m.ticker = w.ticker

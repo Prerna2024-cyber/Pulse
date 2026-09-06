@@ -51,13 +51,23 @@ export async function fetchUSQuotes(tickers) {
       continue;
     }
     // Twelve Data sends these as strings; missing ones normalize to null so a
-    // priced row is never dropped just for lacking a day change.
+    // priced row is never dropped just for lacking a day change or a range.
+    //
+    // `high`/`low` here are the session's, not the 52-week figures — those
+    // live under a separate fifty_two_week object and are deliberately left
+    // alone. `close` is the latest price during a live session and the
+    // settled close afterwards, which is why it feeds `price` above while
+    // previous_close stays the prior session's baseline.
     quotes.push({
       ticker: symbol,
       price,
       volume: Math.trunc(volume),
       dayChange: toFiniteOrNull(quote.change),
       dayChangePercent: toFiniteOrNull(quote.percent_change),
+      dayOpen: toFiniteOrNull(quote.open),
+      previousClose: toFiniteOrNull(quote.previous_close),
+      dayHigh: toFiniteOrNull(quote.high),
+      dayLow: toFiniteOrNull(quote.low),
       fetchedAt,
     });
   }

@@ -75,18 +75,27 @@ export async function recordQuotes(quotes) {
       q.volume,
       q.dayChange ?? null,
       q.dayChangePercent ?? null,
+      q.dayOpen ?? null,
+      q.previousClose ?? null,
+      q.dayHigh ?? null,
+      q.dayLow ?? null,
       q.fetchedAt,
     ]);
 
     await client.query(
       `
-      INSERT INTO market_data (ticker, price, volume, day_change, day_change_percent, fetched_at)
+      INSERT INTO market_data (ticker, price, volume, day_change, day_change_percent,
+                               day_open, previous_close, day_high, day_low, fetched_at)
       VALUES ${latestRows.join(', ')}
       ON CONFLICT (ticker)
       DO UPDATE SET price = EXCLUDED.price,
                     volume = EXCLUDED.volume,
                     day_change = EXCLUDED.day_change,
                     day_change_percent = EXCLUDED.day_change_percent,
+                    day_open = EXCLUDED.day_open,
+                    previous_close = EXCLUDED.previous_close,
+                    day_high = EXCLUDED.day_high,
+                    day_low = EXCLUDED.day_low,
                     fetched_at = EXCLUDED.fetched_at
       `,
       latestValues

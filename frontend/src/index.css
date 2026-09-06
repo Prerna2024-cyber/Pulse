@@ -2154,6 +2154,36 @@ html {
   white-space: nowrap;
 }
 
+/* The day's open/high/low: deliberately quieter than .cell-price — lighter
+   weight, smaller, muted — so the current price stays the thing the eye lands
+   on. Stacked rather than inline so the three stay readable at narrow widths
+   and the numbers line up on their right edge. */
+.cell-range {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.range-item {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Fixed width so O/H/L line up and the figures form a clean column. */
+.range-key {
+  min-width: 1.1em;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
 /* ---------- Wider screens ---------- */
 
 @media (min-width: 720px) {
