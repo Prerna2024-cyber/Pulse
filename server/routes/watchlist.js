@@ -61,14 +61,42 @@ watchlistRouter.post('/users/:username/watchlist', loadUser, async (req, res, ne
   }
 });
 
+// Removing a ticker drops the user's snapshot of it as well as the watchlist
+// row. The snapshot is "what this user last saw", and once they've stopped
+// watching there is nothing for it to be the baseline of.
+//
+// Leaving it behind was not merely untidy. Re-adding the ticker would resume
+// from the old snapshot, so the first What Changed after re-adding would diff
+// against a price from before the removal and report a move "since you last
+// checked" spanning a period the user wasn't watching at all. The whole
+// feature rests on the snapshot meaning what it says.
+//
+// Both deletes are one statement so they cannot half-apply. The snapshot
+// delete is gated on the watchlist row actually having been removed, which
+// keeps the 404 path a true no-op — a request naming a ticker the user isn't
+// watching changes nothing.
 watchlistRouter.delete('/users/:username/watchlist/:ticker', loadUser, async (req, res, next) => {
   try {
     const ticker = req.params.ticker.toUpperCase();
-    const { rowCount } = await pool.query('DELETE FROM watchlist_items WHERE user_id = $1 AND ticker = $2', [
-      req.user.id,
-      ticker,
-    ]);
-    if (rowCount === 0) return res.status(404).json({ error: `"${ticker}" is not in your watchlist` });
+    const { rows } = await pool.query(
+      `WITH removed AS (
+         DELETE FROM watchlist_items
+         WHERE user_id = $1 AND ticker = $2
+         RETURNING id
+       ),
+       cleared AS (
+         DELETE FROM snapshots
+         WHERE user_id = $1 AND ticker = $2 AND EXISTS (SELECT 1 FROM removed)
+         RETURNING user_id
+       )
+       SELECT (SELECT count(*) FROM removed) AS removed,
+              (SELECT count(*) FROM cleared) AS cleared`,
+      [req.user.id, ticker]
+    );
+
+    if (Number(rows[0].removed) === 0) {
+      return res.status(404).json({ error: `"${ticker}" is not in your watchlist` });
+    }
     res.status(204).end();
   } catch (err) {
     next(err);
