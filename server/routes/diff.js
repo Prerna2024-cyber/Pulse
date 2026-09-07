@@ -13,6 +13,10 @@ export const diffRouter = Router();
 diffRouter.get('/users/:username/diff', loadUser, async (req, res, next) => {
   try {
     const exchanges = exchangesForMarket(req.user.preferredMarket);
+    // The user's own thresholds, loaded with the user row. Passing them here
+    // is the whole of "let users decide what significant means" — the detector
+    // already took them as parameters and simply never got any.
+    const { priceThresholdPercent, volumeMultiplier } = req.user;
     const { rows } = await pool.query(
       `SELECT w.ticker, t.company_name AS "companyName", t.exchange,
               m.price AS "currentPrice", m.volume AS "currentVolume", m.fetched_at AS "fetchedAt",
@@ -40,6 +44,8 @@ diffRouter.get('/users/:username/diff', loadUser, async (req, res, next) => {
         companyName: r.companyName,
         current: { price: Number(r.currentPrice), volume: Number(r.currentVolume) },
         previous: r.previousPrice != null ? { price: Number(r.previousPrice), volume: Number(r.previousVolume) } : null,
+        priceThresholdPercent,
+        volumeMultiplier,
       }),
       // The significance result carries the name only inside its summary
       // sentence, which exists solely for meaningful changes. Unflagged rows
@@ -83,7 +89,11 @@ diffRouter.get('/users/:username/diff', loadUser, async (req, res, next) => {
       );
     }
 
-    res.json({ changes, pending });
+    // The thresholds ride along with the diff so the surfaces that explain it
+    // can state the rule the user is actually on, rather than the constants
+    // they used to be on. Without this the frontend would have to guess, and
+    // it would guess 2%.
+    res.json({ changes, pending, thresholds: { priceThresholdPercent, volumeMultiplier } });
   } catch (err) {
     next(err);
   }
