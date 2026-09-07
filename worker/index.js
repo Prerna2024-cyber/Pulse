@@ -3,7 +3,13 @@ import { pool, getTrackedTickers, recordQuotes } from './db.js';
 import { installProcessGuards } from '../lib/processGuards.js';
 import { fetchIndianQuotes } from './indianStockApi.js';
 import { fetchUSQuotes } from './twelveData.js';
-import { isWithinPollWindow, marketStatus, POST_CLOSE_GRACE_MINUTES } from '../lib/marketHours.js';
+import {
+  isWithinPollWindow,
+  marketStatus,
+  sessionDateForMarket,
+  POST_CLOSE_GRACE_MINUTES,
+} from '../lib/marketHours.js';
+import { partitionBySession, staleQuotesMessage } from '../lib/freshness.js';
 import { positiveIntFromEnv } from '../lib/env.js';
 
 // This process runs unattended for hours. A stray rejection anywhere in a
@@ -100,8 +106,40 @@ async function pollGroup(group) {
     return;
   }
 
-  await recordQuotes(quotes);
-  console.log(`[worker:${group.name}] recorded ${quotes.length}/${active.length} tracked tickers`);
+  // The schedule says this market is open; the quotes themselves get the last
+  // word. marketHours.js has no holiday calendar, so on a trading holiday it
+  // waves the poll through and the provider hands back the previous session's
+  // close — which, recorded on a moving fetched_at, is indistinguishable
+  // downstream from a live price that happens not to be moving. See
+  // lib/freshness.js.
+  //
+  // Under IGNORE_MARKET_HOURS the check is skipped along with the schedule
+  // gate: that flag exists so a manual out-of-hours run returns something
+  // rather than looking broken, and filtering every quote as stale would
+  // defeat it just as thoroughly as skipping the poll.
+  let toRecord = quotes;
+  if (!IGNORE_MARKET_HOURS) {
+    const sessionDate = sessionDateForMarket(group.market);
+    const { fresh, stale, undated } = partitionBySession(quotes, sessionDate);
+    const message = staleQuotesMessage(stale, sessionDate);
+    if (message) console.log(`[worker:${group.name}] ${message}`);
+    if (undated.length > 0) {
+      console.error(
+        `[worker:${group.name}] ${undated.length} quote(s) carried no source date — ` +
+          `recording them unchecked, which is the safe direction, but the provider's ` +
+          `response shape may have changed`
+      );
+    }
+    toRecord = fresh;
+  }
+
+  if (toRecord.length === 0) {
+    console.log(`[worker:${group.name}] nothing fresh to record from ${active.length} tracked ticker(s)`);
+    return;
+  }
+
+  await recordQuotes(toRecord);
+  console.log(`[worker:${group.name}] recorded ${toRecord.length}/${active.length} tracked tickers`);
 }
 
 async function warnAboutUnroutedExchanges() {

@@ -6,6 +6,7 @@
 // per poll, same batching approach as the Indian fetcher.
 
 import { toFiniteOrNull } from '../lib/quote.js';
+import { quoteSessionDate } from '../lib/freshness.js';
 import { positiveIntFromEnv } from '../lib/env.js';
 
 const API_KEY = process.env.TWELVE_DATA_API_KEY;
@@ -70,6 +71,14 @@ export async function fetchUSQuotes(tickers) {
       dayHigh: toFiniteOrNull(quote.high),
       dayLow: toFiniteOrNull(quote.low),
       fetchedAt,
+      // The provider's own account of which session this quote is from, and
+      // whether it thinks the market is open. Neither is used here — the
+      // worker decides what to do with them (see lib/freshness.js), because
+      // that decision also has to respect IGNORE_MARKET_HOURS, which lives
+      // there. `datetime` is the session date for a daily quote; on a holiday
+      // it stays on the previous trading day while fetchedAt keeps moving.
+      sourceDate: quoteSessionDate(quote.datetime),
+      sourceMarketOpen: typeof quote.is_market_open === 'boolean' ? quote.is_market_open : null,
     });
   }
   return quotes;

@@ -26,6 +26,7 @@
 // lose every quote in it. Now each ticker succeeds or fails on its own.
 
 import { toFiniteOrNull } from '../lib/quote.js';
+import { quoteSessionDate } from '../lib/freshness.js';
 import { positiveIntFromEnv } from '../lib/env.js';
 
 const BASE_URL = process.env.INDIAN_STOCK_API_BASE_URL || 'http://localhost:8787';
@@ -76,6 +77,13 @@ async function fetchOne({ ticker, exchange }, fetchedAt) {
     dayHigh: toFiniteOrNull(stock.day_high),
     dayLow: toFiniteOrNull(stock.day_low),
     fetchedAt,
+    // This feed has no is_market_open equivalent — the payload carries no
+    // open/closed flag at all — but it does stamp the quote with when it was
+    // last updated, in market-local time: `timestamp` ("2026-09-07 15:33:26")
+    // with `last_update` ("2026-09-07") as the date-only fallback. That is the
+    // half that matters, since the date is what the session check compares.
+    sourceDate: quoteSessionDate(stock.timestamp) ?? quoteSessionDate(stock.last_update),
+    sourceMarketOpen: null,
   };
 }
 
