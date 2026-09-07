@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getDiff } from '../api.js';
 import { changeSignal, quietChangeLine } from '../changeSignal.js';
+import { isWithinPollWindowForExchange } from '../marketHours.js';
 import { significanceSentence } from '../significanceCopy.js';
 import { timeAgo, isStale } from '../timeAgo.js';
 import StatusMessage from './StatusMessage.jsx';
@@ -111,7 +112,15 @@ export default function WhatChangedView({ username, currency = '', thresholds })
           <h2 className="changed-section-heading">No meaningful change · {quiet.length}</h2>
           <ul className="quiet-list">
             {quiet.map((row) => {
-              const stale = row.hasData && isStale(row.fetchedAt);
+              // Scoped to the row's own exchange, exactly as WatchlistTable
+              // does it. Without the second argument isStale defaults to
+              // "the market is polling", so every row here carried a warning
+              // the moment its market shut — while the same reading on the
+              // dashboard, one click away, correctly showed none. Only rows
+              // with data reach this; pending ones have no exchange and no
+              // reading to be overdue.
+              const rowPolling = isWithinPollWindowForExchange(row.exchange);
+              const stale = row.hasData && isStale(row.fetchedAt, rowPolling);
               return (
                 <li key={row.ticker} className="quiet-row">
                   <div className="quiet-text">
