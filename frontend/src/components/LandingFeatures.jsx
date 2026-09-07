@@ -2,9 +2,11 @@ import { motion, useReducedMotion } from 'framer-motion';
 import Reveal from './Reveal.jsx';
 
 // What Pulse actually does — every claim maps to shipped code, not a roadmap.
-// The ±2% and 2x thresholds are the real defaults in lib/significance.js, the
-// markets are the ones migration_add_exchange.sql created, and search really
-// does match on company_name only.
+// The ±2% and 2x thresholds are the real defaults in lib/significance.js —
+// stated as defaults because they're a per-user setting now, adjustable from
+// the What Changed panel once you're in. The markets are the ones
+// migration_add_exchange.sql created, and search really does match on
+// company_name only.
 //
 // The mockup's first card said "price, volume or news". There's no news
 // ingestion anywhere in Pulse, so that card promises price and volume, which
@@ -14,7 +16,7 @@ const FEATURES = [
     tone: 'rose',
     icon: '📄',
     title: 'Meaningful updates',
-    body: 'Plain-English updates on what actually moved. A change is flagged only when price crosses ±2% or volume doubles since you last checked.',
+    body: 'Plain-English updates on what actually moved. By default a change is flagged only when price crosses ±2% or volume doubles since you last checked — and you can set the bar higher or lower.',
   },
   {
     tone: 'green',

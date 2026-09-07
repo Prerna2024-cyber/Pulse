@@ -40,8 +40,22 @@ function clearStoredUsername() {
   }
 }
 
+// Every endpoint that describes a user returns the same shape, so the app can
+// replace its user wholesale instead of merging fields it happens to know
+// about. The thresholds arrive with it — they're part of who the user is, not
+// a separate fetch.
+function toUser(result) {
+  return {
+    username: result.username,
+    preferredMarket: result.preferredMarket,
+    priceThresholdPercent: result.priceThresholdPercent,
+    volumeMultiplier: result.volumeMultiplier,
+  };
+}
+
 export default function App() {
-  const [user, setUser] = useState(null); // { username, preferredMarket }
+  // { username, preferredMarket, priceThresholdPercent, volumeMultiplier }
+  const [user, setUser] = useState(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [bootError, setBootError] = useState(null);
   const [switchingMarket, setSwitchingMarket] = useState(false);
@@ -68,7 +82,7 @@ export default function App() {
 
   function handleLoginResult(result) {
     storeUsername(result.username);
-    setUser({ username: result.username, preferredMarket: result.preferredMarket });
+    setUser(toUser(result));
     setNeedsOnboarding(result.isNewUser);
   }
 
@@ -83,7 +97,7 @@ export default function App() {
 
   async function handleOnboardingPick(market) {
     const result = await api.setMarket(user.username, market);
-    setUser({ username: result.username, preferredMarket: result.preferredMarket });
+    setUser(toUser(result));
     setNeedsOnboarding(false);
     // Checked rather than assumed: a new account is the usual way to reach
     // this screen, but not the only one — an existing user who never picked a
@@ -100,10 +114,19 @@ export default function App() {
     setSwitchingMarket(true);
     try {
       const result = await api.setMarket(user.username, market);
-      setUser({ username: result.username, preferredMarket: result.preferredMarket });
+      setUser(toUser(result));
     } finally {
       setSwitchingMarket(false);
     }
+  }
+
+  // The server is the authority on what was actually stored — it range-checks
+  // and rounds — so the new user comes from its response rather than from the
+  // preset that was clicked. Errors propagate to the control, which is the
+  // thing on screen that can explain them.
+  async function handleThresholdsChange(thresholds) {
+    const result = await api.setThresholds(user.username, thresholds);
+    setUser(toUser(result));
   }
 
   function handleSwitchUser() {
@@ -140,10 +163,11 @@ export default function App() {
         switchingMarket={switchingMarket}
         onMarketChange={handleMarketSwitch}
         onSwitchUser={handleSwitchUser}
+        onThresholdsChange={handleThresholdsChange}
       />
       {/* Over the dashboard, not instead of it: two of the three steps point
           at things on the screen behind. */}
-      {showWalkthrough && <Walkthrough onDone={handleWalkthroughDone} />}
+      {showWalkthrough && <Walkthrough thresholds={user} onDone={handleWalkthroughDone} />}
     </>
   );
 }

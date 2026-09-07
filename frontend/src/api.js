@@ -24,6 +24,15 @@ export const login = (username) => request('/login', { method: 'POST', body: JSO
 export const setMarket = (username, market) =>
   request(`/users/${encodeURIComponent(username)}/market`, { method: 'PUT', body: JSON.stringify({ market }) });
 
+// How sensitive Pulse is for this user. Both values go together — they're two
+// halves of one preset — and the server range-checks them, so a rejection here
+// is a real error worth showing rather than something to paper over.
+export const setThresholds = (username, { priceThresholdPercent, volumeMultiplier }) =>
+  request(`/users/${encodeURIComponent(username)}/thresholds`, {
+    method: 'PUT',
+    body: JSON.stringify({ priceThresholdPercent, volumeMultiplier }),
+  });
+
 export const searchTickers = (username, q) =>
   request(`/tickers/search?q=${encodeURIComponent(q)}&username=${encodeURIComponent(username)}`);
 

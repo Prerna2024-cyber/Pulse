@@ -30,9 +30,14 @@ export default function DashboardScreen({
   switchingMarket,
   onMarketChange,
   onSwitchUser,
+  onThresholdsChange,
 }) {
-  const { username, preferredMarket: market } = user;
+  const { username, preferredMarket: market, priceThresholdPercent, volumeMultiplier } = user;
   const currency = currencyForMarket(market);
+  // The pair the copy and the control both read. Rebuilt each render from the
+  // user rather than held in state, so a save that lands is reflected
+  // everywhere at once.
+  const thresholds = { priceThresholdPercent, volumeMultiplier };
 
   const [view, setView] = useState('home');
   // The ticker whose detail view is open. Held as a ticker string rather than
@@ -102,7 +107,10 @@ export default function DashboardScreen({
     setDiff(null);
     setDiffError(null);
     loadDiff();
-  }, [loadDiff, market, listVersion]);
+    // Thresholds are a dependency for the same reason market is: they change
+    // what the endpoint flags, so the diff on screen is answering the old
+    // question until it's refetched.
+  }, [loadDiff, market, listVersion, priceThresholdPercent, volumeMultiplier]);
 
   useEffect(() => {
     loadTrending();
@@ -183,6 +191,8 @@ export default function DashboardScreen({
                   data={diff}
                   error={diffError}
                   hours={hours}
+                  thresholds={thresholds}
+                  onSaveThresholds={onThresholdsChange}
                   onViewAll={() => setView('changed')}
                 />
 
@@ -277,7 +287,9 @@ export default function DashboardScreen({
 
           {/* The full view still uses the consuming read, so opening it is
               what marks these changes as seen — the dashboard only peeked. */}
-          {view === 'changed' && <WhatChangedView username={username} currency={currency} />}
+          {view === 'changed' && (
+            <WhatChangedView username={username} currency={currency} thresholds={thresholds} />
+          )}
 
           {/* Re-read from `items` every render rather than held in state, so
               the open detail view picks up the 60-second refresh. If the row

@@ -1217,7 +1217,16 @@ html {
 
 .view-header {
   display: flex;
-  justify-content: flex-end;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* The rule this view applied, stated in the user's own thresholds. It sits
+   opposite "Check again" so the two things you might want to know before
+   trusting an empty list — how fresh it is, and what counts — read together. */
+.view-rule {
+  margin: 0;
 }
 
 .tab-bar {
@@ -1878,6 +1887,86 @@ html {
 .panel-changed {
   background: linear-gradient(180deg, #fff6f3 0%, var(--surface) 62%);
   border-color: rgba(255, 111, 94, 0.28);
+}
+
+/* ---------- Sensitivity, inside What Changed ----------
+   Three presets on one rising scale, folded away until asked for. The active
+   one is carried by border, weight and fill together, not colour alone, and
+   the sentence underneath says what the choice means without a number in it —
+   the numbers are already on the buttons. */
+
+.sensitivity-toggle {
+  /* Sits inline at the end of the panel's own sentence, so it reads as part
+     of that sentence rather than as a second action competing with "View
+     all". */
+  margin-left: 2px;
+}
+
+.sensitivity {
+  margin: 0 0 14px;
+  padding: 13px 14px;
+  border: 1px solid rgba(255, 111, 94, 0.3);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.sensitivity-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sensitivity-option {
+  flex: 1 1 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sensitivity-option:hover:not(:disabled) {
+  border-color: var(--brand-coral);
+}
+
+.sensitivity-option:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.sensitivity-option-on {
+  border-color: var(--brand-coral);
+  background: #fff1ec;
+  box-shadow: inset 0 0 0 1px var(--brand-coral);
+}
+
+.sensitivity-option-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.sensitivity-option-on .sensitivity-option-label {
+  font-weight: 700;
+}
+
+.sensitivity-option-detail {
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.sensitivity-meaning {
+  margin: 10px 0 0;
+}
+
+.sensitivity-error {
+  margin: 6px 0 0;
 }
 
 /* ---------- Market status, inside What Changed ----------

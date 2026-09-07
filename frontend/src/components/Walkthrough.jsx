@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { SIGNIFICANCE_SENTENCE } from '../significanceCopy.js';
+import { significanceRule } from '../significanceCopy.js';
 
 // Three cards shown once, over the dashboard rather than instead of it: steps
 // two and three point at things that are on the screen behind, so dimming the
 // product is more use than replacing it.
-const STEPS = [
+//
+// Built per-render rather than held as a module constant, because the last
+// card quotes the significance rule and that's now a per-user setting. A new
+// account is on the defaults, but this screen is also reachable by an existing
+// user who never picked a market — and telling them a rule they aren't on
+// would be worse than not mentioning it.
+const steps = (thresholds) => [
   {
     key: 'what',
     eyebrow: 'What Pulse does',
@@ -25,12 +31,13 @@ const STEPS = [
     body: 'Click any company in your watchlist to see its price through the current trading session, alongside the day’s open, high and low.',
     // Stated plainly because the alternative is a user concluding the feature
     // is broken. "Nothing changed" is a real answer, not an empty state.
-    note: `${SIGNIFICANCE_SENTENCE} — so on a quiet day What changed can correctly say nothing has.`,
+    note: `${significanceRule(thresholds)} — so on a quiet day What changed can correctly say nothing has. You can change what counts, on the What changed panel.`,
   },
 ];
 
-export default function Walkthrough({ onDone }) {
+export default function Walkthrough({ thresholds, onDone }) {
   const [index, setIndex] = useState(0);
+  const STEPS = steps(thresholds);
   const reduced = useReducedMotion();
   const dialogRef = useRef(null);
   const returnFocusRef = useRef(null);

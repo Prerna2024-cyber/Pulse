@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getDiff } from '../api.js';
 import { changeSignal, quietChangeLine } from '../changeSignal.js';
+import { significanceSentence } from '../significanceCopy.js';
 import { timeAgo, isStale } from '../timeAgo.js';
 import StatusMessage from './StatusMessage.jsx';
 
@@ -14,7 +15,7 @@ import StatusMessage from './StatusMessage.jsx';
 // only meaningful changes left the rest unaccounted for, so a quiet watchlist
 // looked the same as a broken one. Flagged moves lead with icon, colour and a
 // sentence; everything else is accounted for quietly underneath.
-export default function WhatChangedView({ username, currency = '' }) {
+export default function WhatChangedView({ username, currency = '', thresholds }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -65,6 +66,12 @@ export default function WhatChangedView({ username, currency = '' }) {
   return (
     <div className="view">
       <div className="view-header">
+        {/* The rule this view is applying, in the user's own numbers. Prefer
+            the ones the response came back with over the ones held in state:
+            they're the thresholds this particular diff was computed under.
+            Adjusting them stays on the dashboard panel — this view is the
+            answer, not the settings. */}
+        <p className="view-rule muted small">{significanceSentence(data.thresholds || thresholds)}</p>
         <button className="btn btn-small" onClick={handleRefresh} disabled={refreshing}>
           {refreshing ? 'Checking…' : '↻ Check again'}
         </button>

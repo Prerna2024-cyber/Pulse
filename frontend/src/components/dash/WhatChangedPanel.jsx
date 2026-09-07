@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { changeSignal } from '../../changeSignal.js';
+import { significanceSentence } from '../../significanceCopy.js';
 import MarketStatus from './MarketStatus.jsx';
+import SensitivityControl from './SensitivityControl.jsx';
 
 // The core feature, given the weight the mockup never gave it: first thing
 // under the greeting, full width, its own colour.
@@ -8,8 +11,13 @@ import MarketStatus from './MarketStatus.jsx';
 // count as having checked. Marking it seen stays with the deliberate act of
 // opening the What Changed view — otherwise every dashboard load would reset
 // the baseline and there'd never be anything left to report.
-export default function WhatChangedPanel({ data, error, hours, onViewAll }) {
+export default function WhatChangedPanel({ data, error, hours, thresholds, onSaveThresholds, onViewAll }) {
   const flagged = data ? data.changes.filter((c) => c.isMeaningful) : [];
+  // Folded away by default. The setting matters, but it's answered once and
+  // then rarely revisited, and a permanent row of buttons above the changes
+  // themselves would make the panel look like a control surface rather than
+  // an answer.
+  const [adjusting, setAdjusting] = useState(false);
 
   return (
     <section className="panel panel-changed">
@@ -18,14 +26,27 @@ export default function WhatChangedPanel({ data, error, hours, onViewAll }) {
           <h2 className="panel-title">
             <span aria-hidden="true">🔔</span> What changed since you last checked
           </h2>
+          {/* The user's own thresholds, not the old constants: this sentence
+              is a promise about what the list below does and does not
+              contain, so it has to track the setting. */}
           <p className="panel-sub">
-            Only moves worth your attention — past ±2% on price, or double the usual volume.
+            {significanceSentence(thresholds)}{' '}
+            <button
+              type="button"
+              className="link-button sensitivity-toggle"
+              aria-expanded={adjusting}
+              onClick={() => setAdjusting((open) => !open)}
+            >
+              {adjusting ? 'Done' : 'Adjust'}
+            </button>
           </p>
         </div>
         <button className="link-button" onClick={onViewAll}>
           View all <span aria-hidden="true">→</span>
         </button>
       </div>
+
+      {adjusting && <SensitivityControl thresholds={thresholds} onSave={onSaveThresholds} />}
 
       <MarketStatus status={hours} />
 

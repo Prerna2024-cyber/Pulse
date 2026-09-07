@@ -17,8 +17,9 @@ Market data is shared and overwritten on every poll. But every user carries
 their own **snapshot** of what they last saw.
 
 Opening What Changed diffs the current price against that personal snapshot,
-flags only moves past a threshold (±2% price, or 2× the usual volume), and
-reports them in plain language — *"Tata Consultancy Services jumped 3.0% since
+flags only moves past a threshold — ±2% price or 2× the usual volume by
+default, and each user can raise or lower that bar — and reports them in plain
+language — *"Tata Consultancy Services jumped 3.0% since
 you last checked"* — rather than as a row of numbers to interpret. Then it
 advances the snapshot, so the next visit measures from that moment.
 
@@ -268,6 +269,8 @@ watchlist_schema.sql
 migration_add_exchange.sql
 migration_add_day_change.sql
 migration_add_price_history.sql
+migration_add_day_range.sql
+migration_add_thresholds.sql
 seed_tickers_200.sql
 ```
 
@@ -282,15 +285,16 @@ cd frontend && npm run dev    # UI on :5173
 ```
 
 ```bash
-npm test                      # 74 tests
+npm test                      # 145 tests
 ```
 
 **Demoing outside market hours:** the worker only polls while a market is open,
 so a newly added ticker won't get a price until the next session. Set
 `IGNORE_MARKET_HOURS=true` to force polling. Similarly, What Changed only flags
-moves past its thresholds — with markets closed it will correctly report that
-nothing changed. Nudge a tracked price in `market_data` by more than 2% to see
-it fire.
+moves past the thresholds that user is on — with markets closed it will
+correctly report that nothing changed. Nudge a tracked price in `market_data`
+past their `price_threshold_percent` (2% by default) to see it fire, or drop
+the bar from the What Changed panel's **Adjust** control.
 
 ---
 
