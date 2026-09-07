@@ -1020,30 +1020,106 @@ html {
   }
 }
 
+/* The market picker's options. Same lifted-card treatment as the sign-in
+   card, since the two screens are halves of one flow — see .signin-card. */
 .market-choices {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: 26px;
 }
 
 .market-choice {
   display: flex;
   align-items: center;
   gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 34px -24px rgba(31, 22, 18, 0.4), 0 2px 8px -4px rgba(31, 22, 18, 0.1);
+  backdrop-filter: blur(10px);
+  color: inherit;
   text-align: left;
   cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
 
-.market-choice strong {
+.market-choice:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(255, 122, 89, 0.5);
+  box-shadow: 0 20px 40px -22px rgba(31, 22, 18, 0.45), 0 3px 10px -4px rgba(31, 22, 18, 0.12);
+}
+
+.market-choice:focus-visible {
+  outline: 2px solid var(--brand-coral);
+  outline-offset: 3px;
+}
+
+/* The card being submitted stays fully legible; it's the other one that
+   recedes, so the screen shows which choice was made rather than just
+   going flat. */
+.market-choice:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.market-choice-busy:disabled {
+  opacity: 1;
+  border-color: rgba(255, 122, 89, 0.55);
+}
+
+.market-choice-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.market-choice-label {
   display: block;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .market-hint {
   display: block;
+  margin-top: 2px;
+  font-size: 0.88rem;
+  color: var(--ink-soft, var(--muted));
+}
+
+.market-choice-detail {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--brand-coral);
+}
+
+.market-choice-go {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  color: var(--ink-soft, var(--muted));
 }
 
 .market-flag {
-  font-size: 1.75rem;
+  flex-shrink: 0;
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.market-error {
+  margin-top: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-choice,
+  .market-choice:hover:not(:disabled) {
+    transition: none;
+    transform: none;
+  }
 }
 
 /* ---------- Buttons ---------- */
@@ -2555,7 +2631,7 @@ html {
    buttons rather than the dashboard's chrome. Mobile-first throughout.
    --------------------------------------------------------------------------- */
 
-.signin {
+.frontdoor {
   --ink: #0f1520;
   --ink-soft: #5b6472;
   position: relative;
@@ -2571,7 +2647,7 @@ html {
   background: linear-gradient(180deg, #fff7f2 0%, #ffeee4 55%, var(--surface) 100%);
 }
 
-.signin-inner {
+.frontdoor-inner {
   position: relative;
   z-index: 1;
   width: 100%;
@@ -2580,7 +2656,7 @@ html {
 
 /* ---------- Sign-in: animated backdrop ---------- */
 
-.signin-bg {
+.frontdoor-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -2588,13 +2664,13 @@ html {
   pointer-events: none;
 }
 
-.signin-wash {
+.frontdoor-wash {
   position: absolute;
   border-radius: 50%;
   will-change: transform;
 }
 
-.signin-wash-a {
+.frontdoor-wash-a {
   width: 78vw;
   max-width: 640px;
   aspect-ratio: 1;
@@ -2604,7 +2680,7 @@ html {
   animation: hero-drift-a 26s ease-in-out infinite;
 }
 
-.signin-wash-b {
+.frontdoor-wash-b {
   width: 68vw;
   max-width: 560px;
   aspect-ratio: 1;
@@ -2617,7 +2693,7 @@ html {
 /* Concentric rings expanding from behind the card — the pulse the product is
    named for. Centred on the same point the form sits over, so the card always
    looks like the source rather than something placed on top of a pattern. */
-.signin-rings {
+.frontdoor-rings {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -2626,7 +2702,7 @@ html {
   transform: translate(-50%, -50%);
 }
 
-.signin-ring {
+.frontdoor-ring {
   position: absolute;
   inset: 0;
   border: 1px solid rgba(255, 122, 89, 0.3);
@@ -2635,11 +2711,11 @@ html {
   will-change: transform, opacity;
   /* Three rings sharing one 9s cycle, each a third of the way behind the
      last, so a ring is always mid-flight and the loop has no visible seam. */
-  animation: signin-pulse 9s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+  animation: frontdoor-pulse 9s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
   animation-delay: calc(var(--ring-index) * 3s);
 }
 
-@keyframes signin-pulse {
+@keyframes frontdoor-pulse {
   0% {
     transform: scale(0.36);
     opacity: 0;
@@ -2656,24 +2732,24 @@ html {
 /* Reduced motion: everything holds still. The rings keep a fixed, visible
    expansion rather than being hidden, so the composition still reads instead
    of leaving a bare panel. */
-.signin-bg-still .signin-wash,
-.signin-bg-still .signin-ring {
+.frontdoor-bg-still .frontdoor-wash,
+.frontdoor-bg-still .frontdoor-ring {
   animation: none;
 }
 
-.signin-bg-still .signin-ring {
+.frontdoor-bg-still .frontdoor-ring {
   opacity: 0.32;
 }
 
-.signin-bg-still .signin-ring:nth-child(1) {
+.frontdoor-bg-still .frontdoor-ring:nth-child(1) {
   transform: scale(0.62);
 }
 
-.signin-bg-still .signin-ring:nth-child(2) {
+.frontdoor-bg-still .frontdoor-ring:nth-child(2) {
   transform: scale(0.92);
 }
 
-.signin-bg-still .signin-ring:nth-child(3) {
+.frontdoor-bg-still .frontdoor-ring:nth-child(3) {
   transform: scale(1.2);
 }
 
@@ -2784,7 +2860,7 @@ html {
 
 /* ---------- Sign-in: the confirmation beat ---------- */
 
-.signin-inner-confirm {
+.signin-confirm-layout {
   text-align: center;
 }
 
@@ -2825,7 +2901,7 @@ html {
 }
 
 @media (min-width: 640px) {
-  .signin-inner {
+  .frontdoor-inner {
     max-width: 460px;
   }
 
@@ -2834,12 +2910,12 @@ html {
   }
 }
 
-/* The media query is the belt to the JS braces: SignInBackground already
+/* The media query is the belt to the JS braces: FrontDoorBackground already
    renders the still variant under prefers-reduced-motion, but a user who flips
    the setting without reloading gets stopped here too. */
 @media (prefers-reduced-motion: reduce) {
-  .signin-wash,
-  .signin-ring,
+  .frontdoor-wash,
+  .frontdoor-ring,
   .signin-confirm-in {
     animation: none;
   }

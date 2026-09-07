@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import PulseLogo from './PulseLogo.jsx';
 import Reveal from './Reveal.jsx';
-import SignInBackground from './SignInBackground.jsx';
+import FrontDoorBackground from './FrontDoorBackground.jsx';
 
 // How long the confirmation is held before the app moves on. Long enough to
 // read four words, short enough not to feel like a gate.
@@ -54,10 +54,10 @@ export default function LoginScreen({ onLogin, onEnter }) {
   if (result) return <SignInConfirmation result={result} reduced={reduced} />;
 
   return (
-    <div className="signin">
-      <SignInBackground />
+    <div className="frontdoor">
+      <FrontDoorBackground />
 
-      <main className="signin-inner">
+      <main className="frontdoor-inner">
         <Reveal className="signin-brand">
           <PulseLogo className="signin-logo" />
         </Reveal>
@@ -132,10 +132,10 @@ function SignInConfirmation({ result, reduced }) {
   const returning = !result.isNewUser;
 
   return (
-    <div className="signin">
-      <SignInBackground />
+    <div className="frontdoor">
+      <FrontDoorBackground />
 
-      <main className="signin-inner signin-inner-confirm">
+      <main className="frontdoor-inner signin-confirm-layout">
         {/* aria-live rather than a focus move: the app is about to change
             screens on its own, so announcing beats stealing focus into
             something that is leaving. */}
