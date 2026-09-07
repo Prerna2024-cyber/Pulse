@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { exchangesForMarket } from '../../lib/market.js';
+import { sessionBoundsForExchange } from '../../lib/marketHours.js';
 import { loadUser } from '../middleware/loadUser.js';
 
 export const tickersRouter = Router();
@@ -126,6 +127,78 @@ tickersRouter.get('/tickers', loadUser, async (req, res, next) => {
       params
     );
     res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// One ticker's price series for a single trading session — the data behind the
+// detail view's chart.
+//
+// Deliberately only ever one session. price_history has been collecting since
+// 2026-09-05, so a 5D or 1M range would be mostly empty and the honest thing
+// is not to offer it rather than to draw a line across a gap. The window comes
+// from sessionBoundsForExchange, so it follows the ticker's own exchange:
+// today's session while that market trades, the last completed one once it
+// shuts. That is also what makes the response stable — after the bell, every
+// request for the rest of the day returns exactly the same series.
+//
+// Rows outside the window are excluded by construction, which matters more
+// than it looks: the worker polled around the clock until 2026-09-06, so
+// price_history holds weekend readings taken while both markets were shut.
+// They are real rows, but they belong to no session, and drawing them would
+// invent trading that never happened.
+tickersRouter.get('/tickers/:ticker/history', loadUser, async (req, res, next) => {
+  try {
+    const ticker = (req.params.ticker || '').trim();
+
+    // The exchange decides the session, so it has to come from the catalog
+    // rather than the caller's preferred market — they agree today, but a
+    // chart keyed off the viewer would silently draw NSE hours around a
+    // NASDAQ series if that ever stopped being true.
+    const { rows: tickerRows } = await pool.query(
+      `SELECT ticker, company_name AS "companyName", exchange FROM tickers WHERE ticker = $1`,
+      [ticker]
+    );
+    if (tickerRows.length === 0) return res.status(404).json({ error: `ticker "${ticker}" not found` });
+    const meta = tickerRows[0];
+
+    const bounds = sessionBoundsForExchange(meta.exchange);
+    // An exchange with no schedule has no session to bound, so there is no
+    // honest window to select on. Say so rather than returning every row ever
+    // recorded under a heading that claims to be one session.
+    if (bounds === null) {
+      return res.json({ ...meta, session: null, points: [] });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT price, recorded_at AS "t"
+       FROM price_history
+       WHERE ticker = $1 AND recorded_at >= $2 AND recorded_at <= $3
+       ORDER BY recorded_at ASC
+       -- A ceiling, not a page size: the fastest poll here is every 60s, so a
+       -- 6.5-hour session tops out near 400 rows. It exists so a runaway
+       -- writer can't turn one request into an unbounded response.
+       LIMIT 2000`,
+      [meta.ticker, bounds.start, bounds.end]
+    );
+
+    res.json({
+      ...meta,
+      session: {
+        start: bounds.start,
+        end: bounds.end,
+        isCurrent: bounds.isCurrent,
+        dayName: bounds.dayName,
+        openLabel: bounds.openLabel,
+        closeLabel: bounds.closeLabel,
+        zoneLabel: bounds.zoneLabel,
+      },
+      // price is NUMERIC, which pg hands back as a string to protect precision.
+      // The chart needs numbers, and a price is well inside what a double
+      // holds exactly at four decimal places.
+      points: rows.map((row) => ({ t: row.t, price: Number(row.price) })),
+    });
   } catch (err) {
     next(err);
   }
