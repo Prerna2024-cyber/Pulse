@@ -2547,3 +2547,305 @@ html {
     height: 260px;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Sign-in — the front door's identity, not the app's
+   Scoped brand tokens like .landing: this screen sits before the product's
+   indigo begins, so it borrows the coral palette, heading scale and pill
+   buttons rather than the dashboard's chrome. Mobile-first throughout.
+   --------------------------------------------------------------------------- */
+
+.signin {
+  --ink: #0f1520;
+  --ink-soft: #5b6472;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 32px 20px;
+  overflow: hidden;
+  color: var(--ink);
+  /* The wash the hero opens on, so arriving from the landing page is a
+     continuation rather than a cut. */
+  background: linear-gradient(180deg, #fff7f2 0%, #ffeee4 55%, var(--surface) 100%);
+}
+
+.signin-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ---------- Sign-in: animated backdrop ---------- */
+
+.signin-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.signin-wash {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.signin-wash-a {
+  width: 78vw;
+  max-width: 640px;
+  aspect-ratio: 1;
+  top: -18%;
+  right: -22%;
+  background: radial-gradient(circle, rgba(255, 140, 110, 0.32), transparent 68%);
+  animation: hero-drift-a 26s ease-in-out infinite;
+}
+
+.signin-wash-b {
+  width: 68vw;
+  max-width: 560px;
+  aspect-ratio: 1;
+  bottom: -20%;
+  left: -18%;
+  background: radial-gradient(circle, rgba(240, 68, 127, 0.16), transparent 70%);
+  animation: hero-drift-b 34s ease-in-out infinite;
+}
+
+/* Concentric rings expanding from behind the card — the pulse the product is
+   named for. Centred on the same point the form sits over, so the card always
+   looks like the source rather than something placed on top of a pattern. */
+.signin-rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(560px, 116vw);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+}
+
+.signin-ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 122, 89, 0.3);
+  border-radius: 50%;
+  opacity: 0;
+  will-change: transform, opacity;
+  /* Three rings sharing one 9s cycle, each a third of the way behind the
+     last, so a ring is always mid-flight and the loop has no visible seam. */
+  animation: signin-pulse 9s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+  animation-delay: calc(var(--ring-index) * 3s);
+}
+
+@keyframes signin-pulse {
+  0% {
+    transform: scale(0.36);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: everything holds still. The rings keep a fixed, visible
+   expansion rather than being hidden, so the composition still reads instead
+   of leaving a bare panel. */
+.signin-bg-still .signin-wash,
+.signin-bg-still .signin-ring {
+  animation: none;
+}
+
+.signin-bg-still .signin-ring {
+  opacity: 0.32;
+}
+
+.signin-bg-still .signin-ring:nth-child(1) {
+  transform: scale(0.62);
+}
+
+.signin-bg-still .signin-ring:nth-child(2) {
+  transform: scale(0.92);
+}
+
+.signin-bg-still .signin-ring:nth-child(3) {
+  transform: scale(1.2);
+}
+
+/* ---------- Sign-in: content ---------- */
+
+.signin-brand {
+  margin-bottom: 22px;
+}
+
+.signin-logo {
+  font-size: 1.35rem;
+}
+
+.signin-eyebrow {
+  margin-bottom: 18px;
+}
+
+.signin-heading {
+  margin: 0;
+  font-size: clamp(2.1rem, 9.5vw, 2.9rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.signin-sub {
+  margin: 14px 0 0;
+  max-width: 40ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* Lifted off the wash rather than outlined — a hard border would read as the
+   app's card style, which belongs on the other side of sign-in. */
+.signin-card {
+  margin-top: 26px;
+  padding: 22px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 44px -24px rgba(31, 22, 18, 0.4), 0 2px 10px -4px rgba(31, 22, 18, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.signin-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.signin-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.signin-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid rgba(31, 22, 18, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.signin-input::placeholder {
+  color: rgba(91, 100, 114, 0.65);
+}
+
+.signin-input:focus {
+  outline: none;
+  border-color: var(--brand-coral);
+  box-shadow: 0 0 0 3px rgba(255, 122, 89, 0.22);
+}
+
+.signin-input:disabled {
+  opacity: 0.6;
+}
+
+.signin-error {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.signin-submit {
+  margin-top: 4px;
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 1rem;
+}
+
+.signin-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.signin-foot {
+  margin: 18px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* ---------- Sign-in: the confirmation beat ---------- */
+
+.signin-inner-confirm {
+  text-align: center;
+}
+
+.signin-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.signin-confirm-in {
+  animation: signin-confirm-rise 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes signin-confirm-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.signin-confirm-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 7.5vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.signin-confirm-sub {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--ink-soft);
+}
+
+@media (min-width: 640px) {
+  .signin-inner {
+    max-width: 460px;
+  }
+
+  .signin-card {
+    padding: 26px;
+  }
+}
+
+/* The media query is the belt to the JS braces: SignInBackground already
+   renders the still variant under prefers-reduced-motion, but a user who flips
+   the setting without reloading gets stopped here too. */
+@media (prefers-reduced-motion: reduce) {
+  .signin-wash,
+  .signin-ring,
+  .signin-confirm-in {
+    animation: none;
+  }
+
+  .signin-input,
+  .signin-submit {
+    transition: none;
+  }
+}

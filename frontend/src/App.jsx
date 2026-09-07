@@ -67,9 +67,13 @@ export default function App() {
     setNeedsOnboarding(result.isNewUser);
   }
 
+  // Returns the response rather than committing it. LoginScreen holds the
+  // moment between the answer and the handoff so it can tell a returning user
+  // from a new one — isNewUser is only knowable here, and committing on the
+  // spot unmounted that screen before it could say anything. The boot path
+  // above still commits directly, because there is no screen to narrate it.
   async function handleLogin(username) {
-    const result = await api.login(username);
-    handleLoginResult(result);
+    return api.login(username);
   }
 
   async function handleOnboardingPick(market) {
@@ -106,7 +110,7 @@ export default function App() {
   }
   if (!user) {
     return showLogin ? (
-      <LoginScreen onLogin={handleLogin} />
+      <LoginScreen onLogin={handleLogin} onEnter={handleLoginResult} />
     ) : (
       <LandingScreen onGetStarted={() => setShowLogin(true)} />
     );
