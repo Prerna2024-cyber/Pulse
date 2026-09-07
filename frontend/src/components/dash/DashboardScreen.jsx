@@ -13,6 +13,7 @@ import SectorBrowser from './SectorBrowser.jsx';
 import WatchlistTable from './WatchlistTable.jsx';
 import TrendingSection from '../TrendingSection.jsx';
 import WhatChangedView from '../WhatChangedView.jsx';
+import TickerDetailView from './TickerDetailView.jsx';
 
 // Prices are written by the worker every 60s for India, so refreshing the
 // screen any faster would just re-read the same numbers.
@@ -34,6 +35,11 @@ export default function DashboardScreen({
   const currency = currencyForMarket(market);
 
   const [view, setView] = useState('home');
+  // The ticker whose detail view is open. Held as a ticker string rather than
+  // the row object so the 60-second refresh keeps the open view's figures
+  // current — a captured object would freeze at whatever it held when the row
+  // was clicked.
+  const [detailTicker, setDetailTicker] = useState(null);
   const [items, setItems] = useState(null);
   const [error, setError] = useState(null);
   const [removingTicker, setRemovingTicker] = useState(null);
@@ -212,6 +218,10 @@ export default function DashboardScreen({
                     error={error}
                     removingTicker={removingTicker}
                     onRemove={handleRemove}
+                    onOpen={(ticker) => {
+                      setDetailTicker(ticker);
+                      setView('detail');
+                    }}
                   />
                 </section>
               </div>
@@ -268,6 +278,35 @@ export default function DashboardScreen({
           {/* The full view still uses the consuming read, so opening it is
               what marks these changes as seen — the dashboard only peeked. */}
           {view === 'changed' && <WhatChangedView username={username} currency={currency} />}
+
+          {/* Re-read from `items` every render rather than held in state, so
+              the open detail view picks up the 60-second refresh. If the row
+              has gone — removed in another tab, or the market switched under
+              it — fall back rather than render a blank panel. */}
+          {view === 'detail' &&
+            (() => {
+              const item = items?.find((row) => row.ticker === detailTicker);
+              if (!item) {
+                return (
+                  <section className="panel detail-view">
+                    <button className="link-button detail-back" onClick={() => setView('home')}>
+                      <span aria-hidden="true">←</span> Back to watchlist
+                    </button>
+                    <p className="panel-empty muted">
+                      {items === null ? 'Loading…' : "That stock isn't on your watchlist any more."}
+                    </p>
+                  </section>
+                );
+              }
+              return (
+                <TickerDetailView
+                  username={username}
+                  item={item}
+                  currency={currency}
+                  onBack={() => setView('home')}
+                />
+              );
+            })()}
         </main>
       </div>
     </div>

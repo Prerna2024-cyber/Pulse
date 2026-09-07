@@ -53,3 +53,9 @@ export const getSectors = (username) =>
 
 export const getTickersBySector = (username, sector) =>
   request(`/tickers?sector=${encodeURIComponent(sector)}&username=${encodeURIComponent(username)}`);
+
+// One session's price series for a ticker — see the endpoint in
+// server/routes/tickers.js. The session window is chosen server-side from the
+// ticker's own exchange, so there is no range parameter to pass.
+export const getTickerHistory = (username, ticker) =>
+  request(`/tickers/${encodeURIComponent(ticker)}/history?username=${encodeURIComponent(username)}`);

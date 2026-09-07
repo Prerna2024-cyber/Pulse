@@ -2346,3 +2346,204 @@ html {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------------------------------------------------------------------------
+   Ticker detail view + intraday chart
+   --------------------------------------------------------------------------- */
+
+/* The name cell is a button now. Stripped back to look exactly like the text
+   it replaced — the affordance is the hover and the focus ring, not a border,
+   because every row having a visible button would turn the table into a wall
+   of chrome. */
+.cell-name-button {
+  width: 100%;
+  padding: 4px;
+  margin: -4px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cell-name-text {
+  min-width: 0;
+}
+
+.cell-name-button:hover strong {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.cell-name-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.detail-back {
+  margin-bottom: 18px;
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-avatar {
+  width: 42px;
+  height: 42px;
+  font-size: 1.05rem;
+}
+
+.detail-title {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+.detail-sub {
+  margin: 2px 0 0;
+}
+
+/* Baseline-aligned so the change sits on the price's baseline rather than
+   floating beside its cap height. Wraps on narrow screens instead of
+   shrinking the price. */
+.detail-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.detail-price {
+  font-size: 1.75rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.detail-session {
+  margin: 4px 0 0;
+}
+
+/* The plot. A fixed height rather than an aspect ratio: on a phone an
+   aspect-ratio box would collapse to something too short to read a trend in,
+   and the SVG stretches to whatever box it is given. */
+.price-chart {
+  position: relative;
+  margin-top: 18px;
+}
+
+.price-chart-svg {
+  display: block;
+  width: 100%;
+  height: 180px;
+  overflow: visible;
+}
+
+.price-chart-line {
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.price-chart-area {
+  fill: var(--muted);
+  opacity: 0.1;
+}
+
+/* The opening price. Dashed and faint — a reference, not a series. */
+.price-chart-baseline {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.price-chart-up .price-chart-line {
+  stroke: var(--positive);
+}
+.price-chart-up .price-chart-area {
+  fill: var(--positive);
+}
+
+.price-chart-down .price-chart-line {
+  stroke: var(--negative);
+}
+.price-chart-down .price-chart-area {
+  fill: var(--negative);
+}
+
+/* Corner labels for the price domain, outside the SVG so they aren't
+   stretched by preserveAspectRatio="none". */
+.price-chart-hi,
+.price-chart-lo {
+  position: absolute;
+  right: 0;
+  padding: 0 4px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.price-chart-hi {
+  top: -6px;
+}
+
+.price-chart-lo {
+  bottom: -6px;
+}
+
+.price-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.detail-partial {
+  margin: 12px 0 0;
+}
+
+/* Wraps to two columns on a phone and lays out in a row once there's width —
+   the figures are short, so a rigid three-column grid would leave gaps. */
+.detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  margin: 20px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--border);
+  list-style: none;
+}
+
+.detail-stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.detail-stat-value {
+  display: block;
+  margin-top: 2px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 640px) {
+  .detail-title {
+    font-size: 1.35rem;
+  }
+
+  .detail-price {
+    font-size: 2rem;
+  }
+
+  .price-chart-svg {
+    height: 260px;
+  }
+}

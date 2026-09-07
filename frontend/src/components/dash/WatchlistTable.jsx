@@ -3,15 +3,15 @@ import { dayChangeSignal } from '../../dayChange.js';
 import { dayRangeItems } from '../../dayRange.js';
 import { marketStatusForExchange, isWithinPollWindowForExchange } from '../../marketHours.js';
 
-// The watchlist as the mockup's table, minus the Chart column: sparklines need
-// a price history and market_data keeps exactly one row per ticker, so there
-// is no series to draw. Storing history would mean a new table and a change to
-// how the worker writes — a real feature, not a visual detail, so the column
-// is gone rather than faked with random points.
+// The watchlist as the mockup's table. There is still no inline Chart column:
+// price_history now gives each ticker a real series, but a sparkline squeezed
+// into a table cell on a phone is a few pixels of noise. The series is shown
+// where it can be read instead — clicking a company opens its detail view, and
+// the name cell is the control that gets you there.
 //
 // Everything the row does show is real, including the per-row staleness
 // warning carried over from the existing watchlist.
-export default function WatchlistTable({ items, currency, error, removingTicker, onRemove }) {
+export default function WatchlistTable({ items, currency, error, removingTicker, onRemove, onOpen }) {
   if (error) {
     return <p className="panel-empty error-text">Couldn't load your watchlist — {error}</p>;
   }
@@ -69,18 +69,27 @@ export default function WatchlistTable({ items, currency, error, removingTicker,
             const lastSession = range.length > 0 && rowMarket !== null && !rowMarket.isOpen;
             return (
               <tr key={item.ticker}>
+                {/* The name is the control, not the whole row: a row-wide
+                    click target would swallow the remove button inside it, and
+                    a <tr> can't be a button without losing the table
+                    semantics screen readers navigate by. */}
                 <td>
-                  <div className="cell-name">
+                  <button
+                    type="button"
+                    className="cell-name cell-name-button"
+                    onClick={() => onOpen(item.ticker)}
+                    aria-label={`Open ${item.companyName} detail and price chart`}
+                  >
                     <span className="cell-avatar" aria-hidden="true">
                       {item.companyName.trim().charAt(0).toUpperCase()}
                     </span>
-                    <div>
+                    <span className="cell-name-text">
                       <strong>{item.companyName}</strong>
                       <span className="muted small">
                         {item.ticker} · {item.exchange}
                       </span>
-                    </div>
-                  </div>
+                    </span>
+                  </button>
                 </td>
 
                 <td className="col-num">
