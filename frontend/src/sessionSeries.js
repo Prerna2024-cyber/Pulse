@@ -98,3 +98,34 @@ export function sessionSeries(points, session) {
     last: clean[clean.length - 1].price,
   };
 }
+
+// Whether the detail view should fetch again on this tick.
+//
+// The gate this replaces was the `isCurrent` flag off the last response, which
+// is a fact about the moment that response was built and never re-evaluates.
+// That left two holes. A view opened before the bell was told isCurrent:false
+// and then had nothing to re-check it, so it sat on the previous session all
+// morning while the market traded behind it. And a live session's window ends
+// at *now*, so the last fetch before the close always stops short of the close
+// itself — the final minutes are only ever visible to a request made after the
+// bell, which the old gate had already stopped from happening.
+//
+// So the answer is recomputed each tick from the clock, and one settling fetch
+// is allowed after a session the view actually watched has ended.
+//
+// `marketIsCurrent` comes from the viewer's own clock via sessionBoundsForExchange.
+// It agrees with the server by construction — the drift sweep is what makes
+// that safe to rely on rather than a guess about the server's answer.
+export function shouldPollSession({ hasData, loadedSessionIsCurrent, marketIsCurrent }) {
+  // The first load hasn't landed yet, so there is nothing to reason about.
+  if (!hasData) return true;
+
+  // Trading now: this is the ordinary case.
+  if (marketIsCurrent) return true;
+
+  // The bell has gone, but the data on screen was fetched while the session
+  // was live, so its window stops short of the close. Exactly one more fetch
+  // settles it — the response comes back with isCurrent:false, which makes
+  // this false on the next tick and ends the polling.
+  return loadedSessionIsCurrent === true;
+}

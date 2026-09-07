@@ -120,3 +120,40 @@ test('Date objects and ISO strings are both accepted', () => {
   const asDates = series(5).map((p) => ({ t: new Date(p.t), price: p.price }));
   assert.deepEqual(sessionSeries(asDates, session()).points, sessionSeries(series(5), session()).points);
 });
+
+// --- polling gate ---------------------------------------------------------
+
+import { shouldPollSession } from './sessionSeries.js';
+
+test('the first load always goes ahead', () => {
+  assert.equal(shouldPollSession({ hasData: false, loadedSessionIsCurrent: false, marketIsCurrent: false }), true);
+});
+
+test('a live session keeps polling', () => {
+  assert.equal(shouldPollSession({ hasData: true, loadedSessionIsCurrent: true, marketIsCurrent: true }), true);
+});
+
+// The hole that let a view opened before the bell sit on the previous session
+// all morning: the market opens, and nothing on screen had re-checked.
+test('polling starts when the market opens under an already-open view', () => {
+  const beforeBell = { hasData: true, loadedSessionIsCurrent: false, marketIsCurrent: false };
+  assert.equal(shouldPollSession(beforeBell), false);
+  assert.equal(shouldPollSession({ ...beforeBell, marketIsCurrent: true }), true);
+});
+
+// A live window ends at *now*, so the last in-session fetch never contains the
+// close. One request after the bell is what completes the session.
+test('one settling fetch is allowed after the bell, then it stops', () => {
+  const justClosed = { hasData: true, loadedSessionIsCurrent: true, marketIsCurrent: false };
+  assert.equal(shouldPollSession(justClosed), true);
+
+  // That fetch returns isCurrent:false, which ends it.
+  assert.equal(shouldPollSession({ ...justClosed, loadedSessionIsCurrent: false }), false);
+});
+
+test('a closed market that was never watched live does not poll', () => {
+  assert.equal(
+    shouldPollSession({ hasData: true, loadedSessionIsCurrent: false, marketIsCurrent: false }),
+    false
+  );
+});

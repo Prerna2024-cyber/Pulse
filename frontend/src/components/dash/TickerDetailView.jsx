@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getTickerHistory } from '../../api.js';
-import { sessionSeries, MIN_CHART_POINTS } from '../../sessionSeries.js';
+import { sessionSeries, shouldPollSession, MIN_CHART_POINTS } from '../../sessionSeries.js';
+import { sessionBoundsForExchange } from '../../marketHours.js';
 import { dayChangeSignal } from '../../dayChange.js';
 import { dayRangeItems } from '../../dayRange.js';
 import { useAutoRefresh } from '../../useAutoRefresh.js';
@@ -38,10 +39,27 @@ export default function TickerDetailView({ username, item, currency, onBack }) {
     load();
   }, [load]);
 
-  // Only while the market is actually trading. Once it has shut the window is
-  // fixed at the close, so every further request would return an identical
-  // series — see the endpoint's note.
-  useAutoRefresh(load, REFRESH_MS, data?.session?.isCurrent === true);
+  // The tick itself always runs; whether it makes a request is decided fresh
+  // each time by shouldPollSession. The gate has to be re-evaluated against
+  // the clock rather than latched from the last response — a view left open
+  // across the opening bell needs to start on its own, and the session's final
+  // minutes only exist in a request made after the close.
+  //
+  // Once that settling fetch lands, the predicate goes false and stays there,
+  // so a closed market still makes no requests — the timer just idles.
+  const tick = useCallback(() => {
+    const marketIsCurrent = sessionBoundsForExchange(item.exchange)?.isCurrent === true;
+    if (!shouldPollSession({
+      hasData: data !== null,
+      loadedSessionIsCurrent: data?.session?.isCurrent === true,
+      marketIsCurrent,
+    })) {
+      return undefined;
+    }
+    return load();
+  }, [load, item.exchange, data]);
+
+  useAutoRefresh(tick, REFRESH_MS);
 
   const session = data?.session ?? null;
   const series = sessionSeries(data?.points, session);
