@@ -2925,3 +2925,182 @@ html {
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Walkthrough — three cards over the dashboard, shown once
+   --------------------------------------------------------------------------- */
+
+.walkthrough-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  /* Bottom sheet on a phone, centred dialog once there's room. */
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 21, 32, 0.42);
+  backdrop-filter: blur(2px);
+  animation: walkthrough-scrim-in 240ms ease both;
+}
+
+@keyframes walkthrough-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.walkthrough {
+  --ink: #0f1520;
+  --ink-soft: #5b6472;
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  padding: 22px;
+  border-radius: 22px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 26px 60px -28px rgba(15, 21, 32, 0.55);
+  animation: walkthrough-rise 320ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.walkthrough:focus {
+  outline: none;
+}
+
+@keyframes walkthrough-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.walkthrough-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.walkthrough-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-coral);
+}
+
+.walkthrough-skip {
+  padding: 6px 10px;
+  margin: -6px -10px -6px 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.walkthrough-skip:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.walkthrough-skip:focus-visible {
+  outline: 2px solid var(--brand-coral);
+  outline-offset: 2px;
+}
+
+/* Holds the tallest step, so advancing doesn't resize the dialog under the
+   pointer and move the Next button out from under a second click. */
+.walkthrough-body {
+  min-height: 188px;
+  margin-top: 14px;
+}
+
+.walkthrough-title {
+  margin: 0;
+  font-size: 1.32rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.walkthrough-text {
+  margin: 10px 0 0;
+  font-size: 0.97rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* The threshold caveat. Set apart with the brand rule rather than an alert
+   colour — it explains a correct outcome, it isn't a warning. */
+.walkthrough-note {
+  margin: 14px 0 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--brand-coral);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.walkthrough-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.walkthrough-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.walkthrough-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(15, 21, 32, 0.18);
+  transition: width 220ms ease, background-color 220ms ease;
+}
+
+.walkthrough-dot-on {
+  width: 20px;
+  border-radius: 999px;
+  background: var(--brand-coral);
+}
+
+.walkthrough-next {
+  padding: 12px 20px;
+}
+
+@media (min-width: 640px) {
+  .walkthrough-scrim {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .walkthrough {
+    padding: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .walkthrough-scrim,
+  .walkthrough {
+    animation: none;
+  }
+
+  .walkthrough-dot {
+    transition: none;
+  }
+}

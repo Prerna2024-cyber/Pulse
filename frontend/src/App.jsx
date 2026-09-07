@@ -5,6 +5,8 @@ import LoginScreen from './components/LoginScreen.jsx';
 import OnboardingScreen from './components/OnboardingScreen.jsx';
 import StatusMessage from './components/StatusMessage.jsx';
 import DashboardScreen from './components/dash/DashboardScreen.jsx';
+import Walkthrough from './components/Walkthrough.jsx';
+import { hasSeenWalkthrough, markWalkthroughSeen } from './walkthroughSeen.js';
 
 const STORAGE_KEY = 'pulse.username';
 
@@ -44,6 +46,9 @@ export default function App() {
   const [bootError, setBootError] = useState(null);
   const [switchingMarket, setSwitchingMarket] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  // Only ever set by finishing onboarding, so it can't appear for a returning
+  // user: they don't pass through that screen.
+  const [showWalkthrough, setShowWalkthrough] = useState(false);
   // Seeded synchronously from localStorage so the very first render already
   // knows a returning user is being signed in — otherwise the landing screen
   // paints for a frame and then vanishes on every reload.
@@ -80,6 +85,15 @@ export default function App() {
     const result = await api.setMarket(user.username, market);
     setUser({ username: result.username, preferredMarket: result.preferredMarket });
     setNeedsOnboarding(false);
+    // Checked rather than assumed: a new account is the usual way to reach
+    // this screen, but not the only one — an existing user who never picked a
+    // market lands here too, and may already have been walked through.
+    if (!hasSeenWalkthrough(result.username)) setShowWalkthrough(true);
+  }
+
+  function handleWalkthroughDone() {
+    markWalkthroughSeen(user.username);
+    setShowWalkthrough(false);
   }
 
   async function handleMarketSwitch(market) {
@@ -120,11 +134,16 @@ export default function App() {
   }
 
   return (
-    <DashboardScreen
-      user={user}
-      switchingMarket={switchingMarket}
-      onMarketChange={handleMarketSwitch}
-      onSwitchUser={handleSwitchUser}
-    />
+    <>
+      <DashboardScreen
+        user={user}
+        switchingMarket={switchingMarket}
+        onMarketChange={handleMarketSwitch}
+        onSwitchUser={handleSwitchUser}
+      />
+      {/* Over the dashboard, not instead of it: two of the three steps point
+          at things on the screen behind. */}
+      {showWalkthrough && <Walkthrough onDone={handleWalkthroughDone} />}
+    </>
   );
 }
